@@ -52,4 +52,5 @@ VALUES
 (19, 2026, 4, '2026-04-28', '4月test社', 't社⑨', 0, 1004, CURRENT_TIMESTAMP, 1004, CURRENT_TIMESTAMP),
 (20, 2026, 5, '2026-05-19', '5月sample会', 's会⑩', 0, 1004, CURRENT_TIMESTAMP, 1004, CURRENT_TIMESTAMP);
 
+
 select * from m_mock_exam;
