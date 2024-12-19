@@ -1,0 +1,23 @@
+ 
+ DROP VIEW kyomutest.v_staff; 
+ DROP VIEW kyomutest.v_routine_exam; 
+ DROP VIEW kyomutest.v_mock_exam; 
+ DROP VIEW kyomutest.v_report_card_subject_valuation; 
+ DROP VIEW kyomutest.v_report_card_rating; 
+ DROP VIEW kyomutest.v_report_card_behavior_state_valuation; 
+ DROP VIEW kyomutest.v_report_card_subject_opinion; 
+ DROP VIEW kyomutest.v_report_card_opinion; 
+ DROP VIEW kyomutest.v_guidance_record_subject_valuation; 
+ DROP VIEW kyomutest.v_guidance_record_rating; 
+ DROP VIEW kyomutest.v_guidance_record_behavior_valuation; 
+ DROP VIEW kyomutest.v_guidance_record_special_activity_viewpoint; 
+ DROP VIEW kyomutest.v_guidance_record_special_activity_valuation; 
+ DROP VIEW kyomutest.v_guidance_record_integrated_studies_valuation; 
+ DROP VIEW kyomutest.v_guidance_record_opinion; 
+ DROP VIEW kyomutest.v_class_date; 
+ DROP VIEW kyomutest.v_attendance_record; 
+ DROP VIEW kyomutest.v_report_card_subject_viewpoint; 
+ DROP VIEW kyomutest.v_routine_exam_subject; 
+ DROP VIEW kyomutest.v_mock_exam_master; 
+ DROP VIEW kyomutest.v_mock_exam_average; 
+

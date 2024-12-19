@@ -1,0 +1,54 @@
+
+
+################################################################
+#
+#   教務管理システム テーブル作成コマンド
+#   １，SQLを格納したパスに書き換えてください。
+#   ２．この中身をコマンドプロンプトに張り付けてください。
+#       テーブルが作成されます。
+#
+################################################################
+
+#フォルダ移動
+cd "C:\Users\h-maruyama\Desktop\才教学園様_教務管理システム\1_基本設計\テーブルレイアウト\SQL生成\SQL\1.Table"
+
+# テーブル作成　コマンド
+
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_guidance_record.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_routine_exam.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_subject.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_routine_exam_subject.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_mock_exam.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_mock_exam_subject.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_mock_exam_average.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_report_card.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_report_card_subject.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_report_card_behavior_state.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_report_card_subject_viewpoint.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_report_card_opinion.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_guidance_record_subject.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_guidance_record_subject_viewpoint.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_guidance_record_special_activity.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_guidance_record_behavior.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_guidance_record_integrated_studies.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_guidance_record_opinion.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_attendance_type.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_m_absence_reason.sql 
+
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_routine_exam.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_mock_exam.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_report_card_subject_valuation.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_report_card_rating.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_report_card_behavior_state_valuation.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_report_card_subject_opinion.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_report_card_opinion.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_guidance_record_subject_valuation.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_guidance_record_rating.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_guidance_record_behavior_valuation.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_guidance_record_special_activity_viewpoint.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_guidance_record_special_activity_valuation.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_guidance_record_integrated_studies_valuation.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_guidance_record_opinion.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_class_date.sql 
+ mysql -h localhost -u root -psofmate kyomutest < CreateTable_t_attendance_record.sql 
+
