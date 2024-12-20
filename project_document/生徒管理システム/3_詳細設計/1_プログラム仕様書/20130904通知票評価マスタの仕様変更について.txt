@@ -1,0 +1,25 @@
+通知票評価を学期毎に保持するように仕様が変更されました。
+仕様変更に伴い下記のテーブルについて変更を行いました。
+	･m_report_valuation
+		school_year   <-   項目追加
+		term          <-   項目追加
+	･t_report_valuation
+		term          <-   項目削除
+
+また、m_rating_codeとm_valuation_codeに新規コードを追加しました。
+	･m_rating_code
+		rating_code:6
+		rating_name:-
+		rating_abv :-
+	･m_valuation_code
+		valuation_code:4
+		valuation_name:-
+		valuation_abv :-
+
+
+これらの変更に伴って、下記のプログラムで修正が発生します。
+	MS170_ReportValuationMaster
+	SS030_ReportSubTeacherInfoRegistration
+
+修正指示については別途チケットを発行します。
+

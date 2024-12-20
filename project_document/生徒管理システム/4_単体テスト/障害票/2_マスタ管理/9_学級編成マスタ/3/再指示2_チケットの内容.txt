@@ -1,0 +1,7 @@
+すみません。分かりにくい指示でした。
+
+一覧表示の表示順は、m_class_organizationの
+  school_code(昇順)
+  grade_code(昇順)
+  class_name(昇順)
+で出力してください。

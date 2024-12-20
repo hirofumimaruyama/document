@@ -1,0 +1,31 @@
+修正依頼
+  生徒情報登録画面と生徒情報編集画面に以下の修正をお願いします。
+    1.登録ボタンを1,2,3ページにも配置してください。
+      また、登録ボタン追加に伴うTabIndexの設定も行ってください。
+    2.半角のみの入力項目の場合はIME-ModeをDisabledにしてください。
+      対応内容としては、該当項目のHTMLタグに｢style="ime-mode: disabled;"｣を追加してください。
+      半角のみの入力項目は以下の通り。
+        1.Pupil card No
+        2.Number
+        3.Date of birth
+        4.Sibling1 date of birth
+        5.Sibling2 date of birth
+        6.Sibling3 date of birth
+        7.Zip code
+        8.Telephone(home)
+        9.FAX(home)
+        10.E-mail1
+        11.E-mail2
+        12.Mobile(father)
+        13.Work phone(father)
+        14.Mobile(mother)
+        15.Work phone(mother)
+        16.EmergencyContact1
+        17.EmergencyContact2
+        18.EmergencyContact3
+        19.Mobile number
+        20.Entrance date
+  詳細は、20131213_修正依頼.xlsを参照してください。
+
+
+チケットはSupportでお願いします。

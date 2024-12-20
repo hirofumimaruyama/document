@@ -1,0 +1,7 @@
+問題
+  School YearとSchoolを選択後、School Yearを変更すると
+  Grade、Classの選択が初期化されるが、Gradeの内容が空になっている。
+
+対応内容
+  SchoolYearとSchoolが選択されている状態で、School Yearが変更された場合
+  変更されたSchool Yearと選択されているSchoolの値で、登録されているGradeをセレクトボックスへ設定するようにしてください。

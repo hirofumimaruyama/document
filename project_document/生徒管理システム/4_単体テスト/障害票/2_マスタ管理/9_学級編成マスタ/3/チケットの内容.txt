@@ -1,0 +1,6 @@
+問題
+  一覧表示順が、SD、Grade、Classの昇順になっていない。
+
+対応内容
+  一覧の表示順を、SD、Grade、Classの昇順にする。
+  また、SDはm_school_code.school_codeの値でソートする。

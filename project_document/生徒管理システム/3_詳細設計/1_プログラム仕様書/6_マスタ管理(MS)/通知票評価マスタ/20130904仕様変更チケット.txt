@@ -1,0 +1,7 @@
+Support #397に伴う修正を行ってください。
+修正箇所
+  (1)検索条件に年度、学期を追加
+  (2)m_report_valuation登録時に年度、学期を登録するように修正。
+
+Following files are updated according to the screen layout change.
+      3_DetailDesign\1_Program Specification\6_Master Management(MS)\ReportValuationMaster\Screen

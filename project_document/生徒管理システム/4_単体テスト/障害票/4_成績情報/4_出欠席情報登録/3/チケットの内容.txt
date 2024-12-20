@@ -1,0 +1,10 @@
+問題
+  Attendance requiredとDays Attendanceについて
+
+対応内容
+  Attendance requiredとDays Attendanceの項目相関チェックを追加してください。
+  また、エラーメッセージは一覧の上に出力するようにしてください。
+  (1)Number of schoolとSuspension of Attendanceが両方入力されている場合かつNumber of school < Suspension of Attendanceの場合エラーとする。
+     エラーメッセージ:｢Suspension of AttendanceはNumber of schoolより大きな値にすることはできません。｣
+  (2)Number of schoolとSuspension of AttendanceとDays absenceが入力されている場合かつAttendance required < Days absenceの場合エラーとする。
+     エラーメッセージ:｢Days absenceはAttendance requiredより大きな値にすることはできません。｣

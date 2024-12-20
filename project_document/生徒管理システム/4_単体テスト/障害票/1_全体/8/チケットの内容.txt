@@ -1,0 +1,9 @@
+問題
+  登録、編集、削除処理後の画面遷移について#1
+
+対応内容
+  以下のように登録、編集、削除後の画面遷移を統一してください。
+  (1)一覧画面がある機能は登録、編集、削除後の画面遷移を一覧画面に戻るように統一してください。
+    例1)StaffRegistrationで登録後、StaffMasterに遷移
+  (2)一覧画面がない機能については再表示するようにしてください。
+    例)ReportSubTeacherInfoRegistrationで登録後、ReportSubTeacherInfoRegistrationで登録データを再表示

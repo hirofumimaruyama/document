@@ -1,0 +1,6 @@
+問題
+  Dateに指定した年度の範囲外の日付が登録できる。
+
+対応内容
+  Dateの入力値は、選択された年度のschool_year_start～school_year_endの間のみ
+  登録可能としてください。

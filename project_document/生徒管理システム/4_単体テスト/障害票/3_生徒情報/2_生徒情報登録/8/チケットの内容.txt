@@ -1,0 +1,11 @@
+問題
+  生徒情報登録処理が正しく行われない。
+    (1) 生徒情報検索を行い生徒情報を画面に反映後、登録処理を行うと生徒情報の更新処理が行われる。
+    (2) 生徒情報検索を行わず、既に登録されているPupil card Noを画面のPupil card Noに入力し登録処理を行おうとすると、Pupil card Noの重複チェックエラーとなる。
+
+対応内容
+  生徒情報登録の仕様について
+    既に登録されているPupil card Noを画面のPupil card Noに入力し登録処理を行う場合
+    Pupil card Noをキーに入力されている内容でt_pupils_basicの更新を行い、t_pupils_enrollには新規登録を行う。
+    また、登録処理を行う際に、Pupil card Noの生徒が既に登録されているクラスに重複して登録される場合はエラーとする。
+    (ST020_PupilsInfoRegistration.doc  70. Register button ・ Check if same pupil is already registered in the same class.の処理を参照)

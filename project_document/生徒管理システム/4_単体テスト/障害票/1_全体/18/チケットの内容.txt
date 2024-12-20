@@ -1,0 +1,20 @@
+問題
+  連動するセレクトボックスの動きについて
+
+対応内容
+  現在、セレクトボックスを1つ選択する毎にDBアクセスが
+  発生する仕様になっておりレスポンスが悪いので
+  PupilsRankInfoRegistrationやSchoolReportOutputで行っているように
+  初期表示時に全てのデータを保持するようにしてください。
+       対象機能は以下の通り
+         1.ReportValuationMaster
+         2.PupilsInformation
+         3.PupilsInfoRegistration
+         4.PupilsInfoSearch
+         5.PupilsInfoEdit
+         6.ExamInfoRegistration
+         7.SchoolReportforClassTeacherInfoRegistration
+         8.SchoolReportforSubjectTeacherInfoRegistration
+         9.AttendanceInformation
+
+チケットはSupportで発行をお願いします。

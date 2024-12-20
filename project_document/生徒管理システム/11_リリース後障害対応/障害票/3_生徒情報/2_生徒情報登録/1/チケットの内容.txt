@@ -1,0 +1,15 @@
+問題
+  登録されているPupilcardNoと、その生徒が登録されているクラスを選択後
+  PupilcardNoを登録されていない番号に変更して登録をしようとすると
+  「This pupil information is already registered.」と
+  エラーがでて登録処理ができない。
+
+対応内容
+  登録されていないPupilcardNoの登録時は新規登録なので
+  同一生徒登録エラーチェックに引っかからないようにしてください。
+
+  情報として
+  登録されているPupilcardNoが入力された後、PupilsinfForm.PupilBasicに値を
+  設定しているが、その後登録されていないPupilcardNoが入力された場合
+  PupilsinfForm.PupilBasicの値が更新されていないため、古いPupilcardNoの
+  情報のままエラーチェックが行われている。

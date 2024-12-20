@@ -1,0 +1,22 @@
+問題
+  エラーメッセージと確認メッセージ出力の順序について
+
+対応内容
+  エラーチェックを確認メッセージ出力後に行っている機能があるので
+  エラーチェックを先に行い、チェックが問題なければ確認メッセージを出力するようにしてください。
+       対象機能は以下の通り
+         1.StaffRegistration
+         2.StaffEdit
+         3.ClassOrganizationRegistration
+         4.ClassOrganizationEdit
+         5.ExamRegistration
+         6.ExamEdit
+         7.DistrictRegistration
+         8.DistrictEdit
+         9.BusCourseRegistration
+         10.BusCourseEdit
+         11.PupilsInfoRegistration
+         12.PupilsInfoEdit
+
+
+チケットはSupportで発行をお願いします。

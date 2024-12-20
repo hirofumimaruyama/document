@@ -1,0 +1,9 @@
+以下の指示は私が勘違いをしていました為、誤りです。すみません。
+  (3) The place to show error message is not right side, but bottom of error item,
+      so please put a margin bottom of each items to prevent layout breakdown.
+
+マスタ系の画面の項目エラーメッセージは、項目の下側に出力するのではなく、右側に出力するようにしてください。
+以下のファイルを修正しました。
+   4_UnitTest\DefectList\1_General\3\General-3.xls
+
+yoshida

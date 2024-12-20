@@ -1,0 +1,22 @@
+エラーチェック1
+  内容
+      Number of school < Suspension of Attendanceの場合にエラー
+  チェックタイミング
+      Number of schoolとSuspension of Attendanceが両方入力された後
+      フォーカスが入力行のNumber of schoolとSuspension of Attendance以外に移動した場合
+  エラー後処理
+      入力行のNumber of schoolにフォーカスを移動する。
+
+
+エラーチェック2
+  内容
+      Attendance required < Days absenceの場合にエラー
+  チェックタイミング
+      Number of schoolとSuspension of AttendanceとDays absenceが全て入力された後
+      フォーカスが入力行のNumber of schoolとSuspension of AttendanceとDays absence以外に移動した場合
+  エラー後処理
+      入力行のNumber of schoolにフォーカスを移動する。
+
+
+また、エラーチェック1とエラーチェック2が同時にエラーになる場合は
+エラーチェック1のエラーメッセージのみポップアップ表示する。

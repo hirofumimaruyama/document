@@ -1,0 +1,7 @@
+問題
+  アカウント名とパスワードを入力せずにログインボタンを押すと
+  アカウント名の必須入力エラーにならず、Login account name or login password is wrong.と出力される。
+
+対応内容
+  アカウント名が入力されていないときのエラーメッセージは
+  エラーメッセージはPlease input Login Account name.としてください。

@@ -1,0 +1,9 @@
+問題
+  Number of schoolとSuspension of Attendanceを入力し、Attendance requiredが出力された状態で
+  どちらかの値を消すと、Attendance requiredに自動計算結果が残る。
+  Days Attendanceも同様。
+
+対応内容
+  Number of schoolとSuspension of Attendanceのどちらかの値が未入力になった場合に
+  Attendance requiredの出力値も消すようにしてください。
+  Days Attendanceも同様に修正をしてください。

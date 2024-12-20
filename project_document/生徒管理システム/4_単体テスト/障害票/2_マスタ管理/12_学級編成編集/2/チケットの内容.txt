@@ -1,0 +1,9 @@
+問題
+  編集処理を行うと、異常終了する。
+  org.springframework.dao.DataIntegrityViolationException
+
+対応内容
+  serial_numの値には、テーブルのIDを登録するようにする。
+
+  他にserial_numを保持しているテーブルの登録機能についても同様の修正をお願いします。
+    MS170_ReportValuationMaster

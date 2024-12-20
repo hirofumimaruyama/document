@@ -1,0 +1,13 @@
+問題
+  照会削除系の画面表示後のフォーカスについて
+
+対応内容
+  照会削除系の画面を表示した際のフォーカスはBackボタンに当ててください。
+       対象機能は以下の通り
+         1.StaffBrowsDelete
+         2.SchoolYearBrowseDelete
+         3.ClassOrganizationBrowsDelete
+         4.ExamBrowseDelete
+         5.DistrictBrowseDelete
+         6.BusCourseBrowseDelete
+         7.PupilsInfoQueryDelete

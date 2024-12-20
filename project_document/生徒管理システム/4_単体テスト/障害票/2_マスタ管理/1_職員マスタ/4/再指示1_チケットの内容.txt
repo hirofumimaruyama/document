@@ -1,0 +1,7 @@
+問題
+  表示項目がlabelのままで、textのdisabledになっていない。
+対処方法
+  表示項目はlabelではなく、textのdisabledで表示するようにすることで
+  表示桁数が多い場合の折り返し対策をする。
+  また、textの枠を削除して、擬似的にlabelのような表示にする。
+  textの枠の削除については、Report Valuation Masterの画面を参考にしてください。

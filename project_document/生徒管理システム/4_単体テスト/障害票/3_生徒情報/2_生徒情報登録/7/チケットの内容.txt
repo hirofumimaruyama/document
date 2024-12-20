@@ -1,0 +1,6 @@
+問題
+  Pupil card Noに登録したPupil card Noを入力して、フォーカスアウトしてもPupil card Noの生徒情報が表示されない。
+  ST020_PupilsInfoRegistration.doc 項目番号68の処理が抜けている。
+
+対応内容
+  ST020_PupilsInfoRegistration.doc 項目番号68の処理参照

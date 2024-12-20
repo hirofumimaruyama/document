@@ -1,0 +1,4 @@
+問題
+  一覧表示時にSDの降順で出力されている。
+対処方法
+  一覧表示時にはSD(m_school_code.school_code)の昇順、Gradeの昇順、Classの昇順で出力するようにしてください。

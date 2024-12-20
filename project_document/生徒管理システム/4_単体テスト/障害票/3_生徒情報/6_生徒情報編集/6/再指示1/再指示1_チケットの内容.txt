@@ -1,0 +1,9 @@
+問題
+  生徒の編集処理時にThis pupil card No is already registeredのエラーメッセージが出て
+  編集処理が行えない場合がある。
+
+対応内容
+  Pupil card Noの値を変更した場合のみ
+  SamePupilRegistrationErrorCheckSpec.xlsの2_(1)の処理を行うようにしてください。
+
+  また、テスト時のDBDumpも添付します。現象の再現に利用してください。

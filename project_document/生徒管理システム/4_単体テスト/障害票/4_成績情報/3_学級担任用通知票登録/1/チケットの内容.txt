@@ -1,0 +1,11 @@
+問題
+  今学期の様子を登録後、総合所見学習面タブで生徒氏名にカーソルを当てたときに
+  登録した今学期の様子情報が出力されない。
+
+対応内容
+  総合所見学習面タブで生徒氏名にカーソルを当てたときのダイアログの内容は
+  カーソルを当てたれた生徒の今学期の様子情報を全教科分出力するようにしてください。
+
+  取得条件は、pupil_enroll_idとtermでt_report_subject_opinionを取得し
+  取得したt_report_subject_opinionのreport_subject_idを元に
+  m_report_subjectからreport_subject_nameを取得する。

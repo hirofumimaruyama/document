@@ -1,0 +1,743 @@
+@CHARSET "UTF-8";
+
+* {
+  margin: 0;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+body {
+	background: white;
+	color: #8a8a8a;
+
+	font-size: 12pt;
+	font-family: Arial,Helvetica,sans-serif;
+}
+
+div#pagecontainer {
+	min-height: 100%;
+/*	margin: 0px 20px;*/
+	position: relative;
+}
+
+div#header {
+	height: 20px;
+	padding-left: 120px;
+	width: 100%;
+}
+
+div#footer {
+	position: absolute;
+	bottom: 0px;
+	height: 20px;
+	width: 100%;
+	
+	text-align: center;
+}
+
+div#content {
+	width: 100%;
+/*	margin: auto;*/
+	align: left;
+	padding-bottom: 30px;
+}
+
+div.globalerror {
+	padding: 1em 2em;
+	color: red;
+}
+
+
+h3#pagetitle {
+	margin-left: 1em;
+	text-align: left;
+}
+
+div.formbuttons {
+	text-align: center;
+}
+
+input[type=text] {
+	border: 0px;
+	background-color: transparent;
+}
+
+input[type=button], input[type=submit], button {
+	min-width: 100px;
+}
+#btView{
+	min-width: 70px;
+  -webkit-border-radius: 27px;
+  -moz-border-radius: 27px;
+ background-color:#a00000;
+ color: #ffffff;
+
+}
+input#smallButton {
+	/* Use in Curriculum */
+	min-width: 40px;
+	margin: 0 0 0 0;
+	padding: 0em 0em;
+}
+table#month{
+	width: auto;
+}
+table#durationMonth {
+	border-spacing: 0px;
+	border: solid gray 1px;
+	border-radius: 4px;
+	width: auto;
+	height: 9em;
+}
+table#durationMonth, tr#durationMonthTr{
+	margin: 0 0 0 0;
+	border-spacing: 0px;
+	padding: 0em 0em;
+	width: auto;
+}
+table#durationMonth, tr#durationMonthTr, th#durationMonthTh{
+	margin: 0 0 0 0;
+	border-spacing: 0px;
+	padding: 0em 0em;
+	width: auto;
+}
+
+table#durationMonth, tr#durationMonthTr, td#durationMonthTd{
+	margin: 0px 0px 0px 0px;
+	border-spacing: 0px;
+	padding: 0em 0em;
+	font-size: 12px;
+	width: auto;
+}
+table#tblEventMain{
+	border: solid #000000 1px;	
+	border-radius: 0px;
+}
+table#tblEvent{	
+	margin: 0px 0px 0px 0px;	
+	border-radius: 0px;
+}
+table#tblEvent tr th{
+	background-color: #4040C0;
+	color: #ffffff;
+}
+
+table#tblEvent tr td{
+	/*width: 55px;	*/
+}
+
+table {
+	margin: 0.5em 1em;
+	border-spacing: 0px;
+	border: solid gray 1px;
+	border-radius: 4px;
+}
+
+thead {
+	background-color: #4040c0;
+	color: #ffffff;
+}
+
+tbody tr.even {
+	background-color: #f0f0f7;
+}
+
+td, th {
+	padding: 0em;
+	border-left: solid gray 2px;
+	border-bottom: solid gray 2px;
+}
+/*td:first-child, th:first-child old version*/
+td:second-child, th:first-child {
+	border-left: none;
+}
+
+thead td:first-child, thead th:first-child {
+	border-radius: 3px 0 0 0;
+}
+
+thead td:last-child, thead th:last-child {
+	border-radius: 0 3px 0 0;
+}
+
+tfoot td {
+	border: none;
+}
+
+
+table tbody tr td span {
+	display: block;
+	color: red;
+}
+#addrlbl{
+	margin-left: 20px;
+	font-size: 18px;
+}
+#selectPrefect{
+	width: 200px;
+	height: 25px;
+}
+#lblFuncName{
+font-size: 18px;
+}
+#selSub{
+	width: 300px;
+	height: 25px;
+}
+#selGrd{
+	width: 200px;
+	height: 25px;
+}
+
+#selClass{
+	width: 200px;
+	height: 25px;
+}
+#selGrdNo{
+	width: 150px;
+}
+#selClsNo{
+	width: 150px;
+}
+#selSbjNo{
+	width: 150px;
+}
+div.pagenavi {
+	margin: 1em auto 0;
+}
+
+div.pagenavi input {
+	min-width: 50px;
+	width: 50px;
+	border: none;
+}
+
+div.pagenavi input:disabled {
+	visibility: hidden;
+}
+
+th.title{
+	background-color: #4040C0;
+	color: #ffffff;
+}
+
+td.title{
+	background-color: #4040C0;
+	color: #ffffff;
+} 
+
+th.width{
+	width:20px;
+	background-color: #4040C0;
+	color: #ffffff;
+}
+
+td.width{
+	width:20px;
+	background-color: #4040C0;
+	color: #ffffff;
+}
+
+
+/*Tabs is called by StudentInf. */
+.tab {
+	float: left;
+	width: 260px;
+	height: 25px;
+	margin: 0px 0px 0px 3px;
+	background: #E6E6E6;
+	border: 1px solid #D6D6D6;
+	-moz-border-top-left-radius: 5px;
+	-moz-border-top-right-radius: 5px;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	overflow: hidden;
+	padding: 7px 0px 0px 0px;
+	cursor: pointer;
+	font-size: 15px;
+	text-align: center;
+}
+.tab:hover {
+	background: white;
+}
+
+.curriculum .col{
+	background-color: #4040C0;
+	color:white;
+	width:180px;
+}
+.curriculum .noLine{
+	border-bottom:0px;
+}
+
+/* set size picture*/
+
+div.img-resize img {
+	height: 100px;
+	width: auto;
+}
+
+div.img-resize {
+	width: 100px;
+	height: 100px;
+	overflow: hidden;
+	text-align: center;
+}
+
+/* set plus button in curriculum*/
+input.plus_button {
+	min-width:0px;
+	float:right;
+	
+}
+div.edit_link{
+	display: table-row;
+	cursor:pointer;
+	text-align: center;
+}
+#dayOfWeekTable tbody td{
+	
+	padding : 0 ;
+	vertical-align: top;
+}
+.weekTable tbody td{
+	
+	padding : 0 ;
+	vertical-align: top;
+}
+
+.attendenceCheck{
+	background-color:#87CEFA; 
+}
+.lateCheck{
+	background-color:#FFFF99;
+}
+.blankCheck{
+	background-color:red;
+}
+.trRowNumSeats{
+	background-color:#87CEFA; 
+	text-align: center;
+}
+.lblAtdCheckRg{
+	color: black;
+}
+#lblTeacherDesk{
+	margin-left: 350px;
+	border-style:solid;
+	border-width:2px;
+	padding: 0.1em;
+}
+a.weekCurriculumLink{
+	text-decoration: none;
+}
+a.weekCurriculumLink:hover{
+	text-decoration: underline;
+}
+input.btn_Search{
+	background-color: transparent;
+    background-image: url("./image/search.png");
+    background-repeat: no-repeat;
+    border-style: none;
+    cursor: pointer;
+    font-size: 0;
+    height: 18px;
+    min-width:15px;
+    vertical-align: middle;
+}
+input.btn_Search:HOVER{
+	background-color: transparent;
+    background-image: url("./image/search.png");
+    background-repeat: no-repeat;
+    border-style: none;
+    cursor: pointer;
+    font-size: 0;
+    height: 18px;
+    min-width:15px;
+    vertical-align: middle;
+    border: 1px solid #7EABCD;
+	border-radius:3px 3px 3px 3px;
+}
+input.BT_Search_email{
+	background-color: transparent;
+    background-image: url("./image/letter.png");
+    background-repeat: no-repeat;
+    border-style: none;
+    cursor: default;
+    font-size: 0;
+    height: 18px;
+    min-width: 24px; 
+    margin-top: 4px;
+    vertical-align: middle;
+}
+.email_search:HOVER{
+	cursor: pointer;
+	color: blue;
+}
+input.BT_Search_email:HOVER{
+	background-color: transparent;
+    background-image: url("./image/letter_view.png");
+    background-repeat: no-repeat;
+    border-style: none;
+    cursor: pointer;
+    font-size: 0;
+    height: 18px;
+    min-width: 24px; 
+    margin-top: 4px;
+    vertical-align: middle;
+}
+input#BT_show_mail{
+	background-color: transparent;
+    background-image: url("./image/mail.png");
+    background-repeat: no-repeat;
+    border-style: none;
+    cursor: default;
+    font-size: 0;
+    height: 18px;
+    min-width: 24px; 
+    margin-top: 4px;
+    vertical-align: middle;
+}
+input#BT_show_mail:HOVER{
+	background-color: transparent;
+    background-image: url("./image/mail_open.png");
+    background-repeat: no-repeat;
+    border-style: none;
+    cursor: pointer;
+    font-size: 0;
+    height: 18px;
+    min-width: 24px; 
+    vertical-align: middle;
+}
+input#BT_Delete {
+    background-color: transparent;
+    background-image: url("./image/icon_delete.png");
+    background-repeat: no-repeat;
+    border-style: none;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 0;
+    height: 16px;
+    margin-top: 4px;
+    vertical-align: middle;
+    min-width: 16px; 
+}
+input#BT_Delete:hover {
+    background-color: transparent;
+    background-image: url("./image/icon_delete2.png");
+    background-repeat: no-repeat;
+    color: #FFFFFF;
+    vertical-align: middle;
+}
+tbody tr.delete {
+	background-color: #ff9393;
+}
+.row3{
+	background-color: #ff9393;
+	border: 1px solid #E9EFEF;
+    font-size: 11px;
+    text-align: center;
+    vertical-align: middle;
+}
+/*Mail Send*/
+/*Email*/
+.red_btn{
+	cursor:pointer;
+	color: white; 
+	border-style: solid; 
+	background-color: #D14836; 
+	border-color: #FFCC99;
+	width: 100px;
+	height: 35px;
+}
+.red_btn:hover{
+	cursor:pointer;
+	color: white; 
+	border-style: solid; 
+	background-color: #C53727; 
+	border-color: #FFCC99;
+	width: 100px;
+	height: 35px;
+}
+/* #send_mail{
+	background-image: url("./img/send_email.png");
+	background-color: transparent;
+    background-repeat: no-repeat;
+    border-style: none;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 0;
+    height: 21px;
+    width: 30px;
+    margin: 3px;
+}
+#send_mail:hover{
+	height: 21px;
+    width: 30px;
+	border: 1px solid #9DABC3;
+	border-radius:3px 3px 3px 3px;
+} */
+form#newEmail{
+	margin-bottom: 2px;
+}
+form#newEmail ul{
+	list-style-type:none;
+	float: left;
+	padding-left: 0px;
+	padding-right: 0px;
+	width: 800px;
+}
+form#newEmail ul li{
+	margin: 1px;
+}
+form#newEmail fieldset{
+	margin-bottom: 2px;
+	margin-top: 5px;
+}
+form#upload ul{
+	list-style-type:none;
+	float: left;
+	padding-left: 0px;
+	padding-right: 0px;
+	width: 100%;
+}
+form#upload fieldset{
+	margin-top: 2px;
+}
+.col_mail {
+    font: bold 11px/1.5em Verdana;
+	padding-right:42px;
+}
+.col1_mail {
+	background-color: #4040C0;
+	color: #ffffff;
+	padding-left:18px;
+	padding-right:30px;
+    width: 70px;
+    font: bold 11px/1.5em Verdana;
+    /* display: inline-block; */
+    vertical-align: top;
+}
+.col2_mail {
+    font: bold 11px/1.5em Verdana;
+    width: auto;
+}
+.col2_mail input {
+    width: 500px;
+    display: block;
+    float: left;
+}
+.col2_mail span {
+	width:auto;
+    overflow: auto;
+}
+.col2_mail select {
+	width: 504px;
+}
+.col2_mail textarea {
+    height: 200px;
+    width: 504px;
+}
+.col3_mail {
+	padding-left:2px;
+    /*font: bold 11px/1.5em Verdana;
+     display: inline-block; */
+    vertical-align: top;
+}
+
+#uploadItem.fileData {
+position: absolute;
+/*  top: 0;
+ right: 0;
+ margin: 0; */
+border: solid transparent;
+border-width: 0 0 100px 200px;
+opacity: 0.0;
+filter: alpha(opacity = 0);
+-o-transform: translate(250px, -50px) scale(1);
+-moz-transform: translate(-300px, 0) scale(4);
+direction: ltr;
+cursor: pointer;
+}
+
+.file_upload_button {
+position: relative;
+cursor: pointer;
+text-align: center;
+}
+
+.file_upload_button span {
+-webkit-box-align: center;
+text-align: center !important;
+cursor: default;
+color: buttontext;
+padding: 2px 6px 3px;
+border: 1px outset buttonface;
+border-image: initial;
+background-color: #E6E6E6;
+box-sizing: border-box;
+-webkit-appearance: button;
+white-space: pre;
+-webkit-rtl-ordering: logical;
+-webkit-user-select: text;
+margin: 0em;
+font: -webkit-small-control;
+color: initial;
+letter-spacing: normal;
+word-spacing: normal;
+text-transform: none;
+text-indent: 0px;
+text-shadow: none;
+display: inline-block;
+text-align: start;
+-webkit-writing-mode: horizontal-tb;
+}
+
+/* **nicEdit* */
+.tbl_mailsend tbody tr td span {
+	display: block;
+}
+
+.col2_mail .nicEdit-main{
+	font: 12px/1.5em Verdana;
+	color: black;
+}
+.nicEdit-panelContain{
+	background-color: transparent !important;
+	border-bottom: 0px !important;
+}
+/* **** End MailSend ***** */
+.add_address{
+	background-image: url("./image/add1_a.png");
+	background-color: transparent;
+    background-repeat: no-repeat;
+    border-style: none;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 0;
+    vertical-align: top;
+    height: 20px;
+    width: 20px;
+    margin-left: 10px;
+}
+.add_address:hover{
+	height: 20px;
+    width: 20px;
+	border: 1px solid #fff;
+	border-radius:3px 3px 3px 3px;
+}
+.add_text{
+	background-image: url("./image/document_add.png");
+	background-color: transparent;
+    background-repeat: no-repeat;
+    border-style: none;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 0;
+    vertical-align: top;
+    height: 20px;
+    width: 20px;
+    margin-left: 10px;
+}
+.add_text:hover{
+	height: 22px;
+    width: 20px;
+	border: 1px solid #fff;
+	border-radius:3px 3px 3px 3px;
+}
+.remove_files{
+	/* font: bold 9px/1.5em Verdana; 
+    size:20px; 
+    position: absolute;*/
+    
+}
+td#td_remove{
+	/* display: inline-block; */
+	
+}
+td#add_text{
+	display: inline-block;
+}
+/** End MailSend **/
+
+/*Text Area*/
+#texts{
+	width: 300px;
+	height: 150px;
+}
+
+.edit{
+	background-image: url("./image/edit.png");
+	background-color: transparent;
+    background-repeat: no-repeat;
+    border-style: none;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 0;
+    vertical-align: top;
+    height: 20px;
+    min-width: 20px;
+}
+.delete{
+	background-image: url("./image/delete.png");
+	background-color: transparent;
+    background-repeat: no-repeat;
+    border-style: none;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 0;
+    vertical-align: top;
+    height: 20px;
+    min-width: 20px;
+}
+.messageSave{
+	text-align: center;
+	color: red;
+}
+.suppName{
+	min-width: 150px;
+}
+
+input.plus_buttonTimeTable {	
+	min-width:0px;
+	float:right;
+	margin-top: 0px;
+}
+
+table.timetableSchedule tbody tr.even {
+	background-color: #f7f0f0;
+}
+table.timetableSchedule tbody tr.eventHoliday {
+	background-color: #fdd;
+}
+table.timetableSchedule tr td.controlBox2 button {
+	min-width:2em;
+	width: 2em;
+	float: right;
+}
+table.timetableSchedule tr td.controlBox2 {
+	min-width: 150px;
+	padding: 5px;
+}
+table.timetableSchedule tbody tr td.controlBox2:hover {
+	cursor: pointer;
+	border: solid #f88 5px;
+	background: #fee;
+	padding: 0px;
+}
+table.tblAttendanceRegis{
+	border: 0px;
+}
+td.attendanceRegisTd{
+	border: 0px;
+	padding: 0em 0em;
+}
+
+.headerStyle{
+	background-color: #4040C0; 
+	color: White;
+}

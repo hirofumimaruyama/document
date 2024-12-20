@@ -1,0 +1,5 @@
+問題
+  SDにm_school_code.school_nameが表示されている。
+
+対応内容
+  SDにはm_school_code.school_abvを設定するようにする。

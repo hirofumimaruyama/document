@@ -1,0 +1,7 @@
+問題
+  HTMLのタイトル名がStaff Masterになっている。
+
+対応内容
+  HTMLのタイトル名をReport Valuation Masterに修正してください。
+
+  他の機能についても同様の問題が無いか見直しをお願いします。

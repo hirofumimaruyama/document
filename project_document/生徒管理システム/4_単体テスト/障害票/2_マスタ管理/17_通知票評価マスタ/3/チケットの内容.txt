@@ -1,0 +1,8 @@
+問題
+  検索条件のSDSelectBoxと、RankSelectBoxの内容について
+
+対応内容
+  SDSelectBoxの内容にはm_school_code.school_abv
+  RankSelectBoxの内容にはm_rank_code.rank_abvの値を設定するようにしてください。
+
+  また他の機能の検索条件で、m_school_code.school_nameを表示している機能も同様に修正してください。

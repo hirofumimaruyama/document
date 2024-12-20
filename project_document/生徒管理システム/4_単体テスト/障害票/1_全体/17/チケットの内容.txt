@@ -1,0 +1,54 @@
+※チケットのTrackerはFeatureで発行してください。
+
+問題
+  確認メッセージおよび完了メッセージの出力について
+
+対応内容
+  確認メッセージの出力について以下のようにしてください。
+    (1)登録時:｢登録処理を行いますがよろしいですか。｣
+       対象機能は以下の通り
+         1.StaffRegistration(Saveボタンを押したとき)
+         2.SchoolYearRegistration(Saveボタンを押したとき)
+         3.ClassOrganizationRegistration(Saveボタンを押したとき)
+         4.ExamRegistration(Saveボタンを押したとき)
+         5.ReportValuationMaster(Saveボタンを押したとき)
+         6.DistrictRegistration(Saveボタンを押したとき)
+         7.Bus CourseRegistration(Saveボタンを押したとき)
+         8.PupilsInfoRegistration(Registerボタンを押したとき)
+         9.PupilsRankInfoRegistration(Registerボタンを押したとき)
+         10.ExamInfoRegistration(Registerボタンを押したとき)
+         11.SchoolReportforClassTeacherInfoRegistration(Registerボタンを押したとき)
+         12.SchoolReportforSubjectTeacherInfoRegistration(Registerボタンを押したとき)
+         13.AttendanceInformation(Saveボタンを押したとき)
+    (2)編集時:｢編集処理を行いますがよろしいですか。｣
+       対象機能は以下の通り
+         1.StaffEdit(Saveボタンを押したとき)
+         2.SchoolYearEdit(Saveボタンを押したとき)
+         3.ClassOrganizationEdit(Saveボタンを押したとき)
+         4.ExamEdit(Saveボタンを押したとき)
+         5.DistrictEdit(Saveボタンを押したとき)	
+         6.BusCourseEdit(Saveボタンを押したとき)
+         7.PupilsInfoEdit(Registerボタンを押したとき)
+    (3)削除時:｢削除処理を行いますがよろしいですか。｣
+       対象機能は以下の通り
+         1.StaffBrowseDelete(Deleteボタンを押したとき)
+         2.SchoolYearBrowseDelete(Deleteボタンを押したとき)
+         3.ClassOrganizationBrowsDelete(Deleteボタンを押したとき)
+         4.ExamBrowseDelete(Deleteボタンを押したとき)
+         5.DistrictBrowseDelete(Deleteボタンを押したとき)
+         6.BusCourseBrowseDelete(Deleteボタンを押したとき)
+         7.PupilsInfoQueryDelete(Deleteボタンを押したとき)
+    (4)データ入力中に検索条件を変更して、入力内容が初期化される場合:｢登録処理を行っていないため、入力内容が破棄されますがよろしいですか。｣
+       対象機能は以下の通り
+         1.ReportValuationMaster
+         2.PupilsRankInfoRegistration
+         3.ExamInfoRegistration
+         4.SchoolReportforClassTeacherInfoRegistration
+         5.SchoolReportforSubjectTeacherInfoRegistration
+         6.AttendanceInformation
+    (5)登録画面でデータ入力中に戻るボタンおよび画面遷移リンクをクリックした場合:｢登録処理を行っていないため、入力内容が破棄されますがよろしいですか。｣
+       対象機能:上記(1)の機能
+    (6)編集画面でデータ編集中に戻るボタンおよび画面遷移リンクをクリックした場合:｢登録処理を行っていないため、変更内容は破棄されますがよろしいですか。｣
+       対象機能:上記(2)の機能
+  完了メッセージについて、完了メッセージは不要になったので出力しないようにしてください。
+   対象機能:全て

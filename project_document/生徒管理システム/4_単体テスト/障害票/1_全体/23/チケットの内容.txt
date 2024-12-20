@@ -1,0 +1,31 @@
+問題
+  検索条件未入力エラーメッセージ出力形式変更
+
+対応内容
+  現在検索条件が未入力の状態で表示ボタンが押された場合に
+  各検索条件セレクトボックスの下にエラーメッセージを出力していますが
+  このエラーメッセージの出力をメッセージボックス出力に変更してください。
+  複数エラーがある場合でも下記メッセージを1回出力するだけとしてください。
+  メッセージ:｢検索条件を設定してください。｣
+  また、検索条件セレクトボックスの下のエラーメッセージ出力領域が
+  無くなるので、明細の出力開始位置を上に詰めるようにしてください。
+       対象機能は以下の通り
+         1.ClassOrganizationMaster
+         2.ExamMaster
+         3.ReportValuationMaster
+         4.PupilsInformation
+         5.PupilsInfoSearch
+         6.EntExamRecord(生徒情報登録画面から遷移する画面)
+         7.PupilsInfoQueryDelete(Score Infoタブ)
+         8.PupilsRankInfoRegistration
+         9.PupilsInfoOutput(CSVボタン押下時)
+         10.EntExamRecord(メインメニューからから遷移する画面)
+         11.ExamInfoRegistration
+         12.SchoolReportforClassTeacherInfoRegistration
+         13.SchoolReportforSubjectTeacherInfoRegistration
+         14.AttendanceInformation
+         15.SchoolReportOutput
+
+  詳細については、全体-23_対応内容.xlsを参照
+
+チケットはSupportで発行をお願いします。

@@ -1,0 +1,10 @@
+問題
+  Telephone(home)、FAX(home)、Mobile(father)、Work phone(father)、Mobile(mother)
+  Work phone(mother)、Mobile numberの形式が______-______となっている。
+
+対応内容
+  電話番号、Fax番号の形式は複数あるため、形式は指定せずに、数値のハイフンの入力のみを許可するようにしてください。
+  ただし、先頭もしくは最後にハイフンが入力されている場合は入力エラーとしてください。
+  エラー内容
+      FAX(home)      :「正しいFAX番号を入力してください。」
+      FAX(home)以外  :「正しい電話番号を入力してください。」

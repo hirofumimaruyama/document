@@ -1,0 +1,7 @@
+問題
+  Days Attendanceの自動計算が間違っている。
+
+対応内容
+  Days Attendanceの自動計算は
+  Attendance required - Days absence
+  の計算結果を出力してください。

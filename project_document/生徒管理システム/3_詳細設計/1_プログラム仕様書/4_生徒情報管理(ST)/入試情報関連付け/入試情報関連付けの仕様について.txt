@@ -1,0 +1,28 @@
+こんにちは。
+
+生徒情報に入試情報を関連付けし、関連付けた入試情報を生徒情報照会時に
+参照できるようにする機能を実装します。
+
+したがって、機能の追加および変更を行います。
+  追加になる機能
+    (1)入試情報検索
+
+  変更になる機能
+    (1)PupilsInfoRegistration
+    (2)PupilsInfoQueryDelete
+    (3)PupilsInfoEdit
+
+概要について
+  登録した入試情報の関連付けを、PupilsInfoRegistrationおよびPupilsInfoEditで行い
+  関連付けた入試情報をPupilsInfoQueryDeleteで参照できるようにします。
+
+入試情報関連付けの流れ
+  1.入試情報を登録
+  2.PupilsInfoRegistrationで入試情報検索を行う
+  3.生徒情報登録時に選択された入試情報のIDを、t_pupils_basic.ent_exam_idに登録
+  4.PupilsInfoQueryDeleteの入試情報タブで、関連付けた入試情報を参照
+  5.関連付けた入試情報を変更したい場合は、PupilsInfoEditで変更可能。
+
+それぞれの機能について、仕様書の翻訳が終わり次第
+正式な指示を送りますのでよろしくお願いします。
+

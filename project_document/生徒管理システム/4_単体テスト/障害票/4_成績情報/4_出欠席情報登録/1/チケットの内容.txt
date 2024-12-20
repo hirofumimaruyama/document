@@ -1,0 +1,6 @@
+問題
+  数値項目について
+
+対応内容
+  Number of school、Suspension of Attendance、Days absence、Lateness、Leave earlyに3桁の入力桁数制限をするようにしてください。
+  また、必須チェックは行わないようにし、未入力の状態でsaveボタンが押された場合は、null値をテーブルに登録するようにしてください。

@@ -1,0 +1,5 @@
+問題
+  Zip code searchでAddressを取得した場合に、pref_name、city_name、town_nameがカンマ区切りで出力される。
+
+対応内容
+  Address欄にはpref_name、city_name、town_nameをカンマで区切らずに、くっつけて出力するようにしてください。

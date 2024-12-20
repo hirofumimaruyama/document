@@ -1,0 +1,45 @@
+問題
+  (1)入力内容を変更していない状態で、検索条件を変更した時に入力内容破棄メッセージが出力される。
+     対象機能
+       1.ReportValuationMaster
+       2.PupilsRankInfoRegistration
+       3.ExamInfoRegistration
+       4.SchoolReportforSubjectTeacherInfoRegistration
+
+  (2)入力内容を変更して検索条件を変えると入力内容破棄メッセージが出力されるが
+     その後、検索条件セレクトボックスを選択するたびに入力内容破棄メッセージが出力される。
+     対象機能
+       1.SchoolReportforClassTeacherInfoRegistration
+       2.AttendanceInformation
+
+  (3)入試情報の関連付けのみを行った後に、戻るボタンおよび画面遷移リンクを押しても
+     入力内容破棄メッセージが出力されない。
+     対象機能
+        1.PupilsInfoRegistration
+        2.PupilsInfoEdit
+
+  (4)入力内容を変更している状態でDisplayボタンを押すと
+     入力内容破棄メッセージが出力されずに、明細の再表示が行われる。
+     対象機能
+       1.ReportValuationMaster
+       2.PupilsRankInfoRegistration
+       3.ExamInfoRegistration
+       4.SchoolReportforClassTeacherInfoRegistration
+       5.SchoolReportforSubjectTeacherInfoRegistration
+       6.AttendanceInformation
+
+対応内容
+  (1)検索条件を変更した時の入力内容破棄メッセージは
+     入力内容が変更されている場合のみとしてください。(戻るボタンや画面遷移リンクを押したときと同様の処理)
+
+  (2)検索条件セレクトボックス変更時の入力内容破棄メッセージは
+     Displayボタンを押して明細出力後、明細の入力内容が変更されている状態で
+     検索条件セレクトボックスを変更したときのみとしてください。
+
+  (3)入試情報の関連付けを行った場合、戻るボタンや画面遷移リンクを押した場合
+     入力内容が変更されたとみなして入力内容破棄メッセージを出力するようにしてください。
+
+  (4)該当機能でDisplayボタンを押したときに、入力内容が変更されている場合は
+     入力内容破棄メッセージを出力するようにしてください。
+
+  また、その他修正点がある機能もありますので、再指示1_全体-20.xlsの各シートを参照してください。

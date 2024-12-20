@@ -1,0 +1,14 @@
+問題
+　画面名および画面遷移履歴に表示する画面名の形式の統一
+
+対応内容
+  マスタ系の機能について、HTMLタイトル名、画面名、画面遷移履歴に表示する画面名を以下のようにしてください。xxxxはマスタ名
+    (1)一覧画面:xxxxMaster
+        例)StaffMaster
+    (2)登録画面:xxxxRegistration
+        例)StaffRegistration
+    (3)照会削除画面:xxxxBrowse Delete
+        例)StaffBrowseDelete
+    (4)編集画面:xxxxEdit
+        例)StaffEdit
+  また、画面名の一部が斜体になっている画面があるので斜体の表示は行わないようにする。

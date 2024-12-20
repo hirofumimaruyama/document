@@ -1,0 +1,2673 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using Headquarters.Class;
+using System.Configuration;
+using System.IO;
+using System.Threading;
+
+namespace Headquarters.Forms
+{
+    /// <summary>
+    /// メニュー画面
+    /// </summary>
+    public partial class frmMenu : Headquarters.Forms.Base.BaseForm
+    {
+        bool closeFlg = false;
+        // ▼2012/03/05 R.K ADD【生産管理】▼
+        // 画面表示フラグ
+        int dispFlg = 0;
+        // ▲2012/03/05 R.K ADD【生産管理】▲
+
+        #region " frmMenu"
+        public frmMenu()
+        {
+            InitializeComponent();
+        }
+        #endregion
+
+        #region " frmMenu_Load"
+        /// <summary>
+        /// ﾌｫｰﾑﾛｰﾄﾞｲﾍﾞﾝﾄ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void frmMenu_Load(object sender, EventArgs e)
+        {
+            // SDKとデータベースの制御フラグを初期化します。
+            Common.bInitialized = false;
+            Common.bOpened = false;
+
+            // 画面終了フラグを初期化
+            closeFlg = false;
+
+            // XMLデータインポート
+            //ProgressDialogオブジェクトを作成する
+            Forms.Base.ProgressDialog pd = new Forms.Base.ProgressDialog("店舗売上情報の取込を行っています",
+                new DoWorkEventHandler(XMLDataImport),
+                100);
+
+            pd.Cursor = Cursors.WaitCursor;
+
+            //進行状況ダイアログを表示する
+            DialogResult result = pd.ShowDialog(this);
+            //結果を取得する
+            if (result == DialogResult.Cancel)
+            {
+                // DBへの接続が出来なかった場合は画面を閉じる
+                if (closeFlg)
+                    this.Close();
+                else
+                    MessageManager.Warning("店舗売上情報の取込中にエラーが発生しました。");
+            }
+
+            //後始末
+            pd.Dispose();
+
+            // ▼2011/11/30 R.K ADD【運用変更：出荷差異確認画面は使わない為非表示】▼
+            btnShukkaDif.Visible = false;
+            // ▲2011/11/30 R.K ADD【運用変更：出荷差異確認画面は使わない為非表示】▲
+
+            // ▼2012/03/05 R.K ADD【生産管理】▼
+            // 画面の初期化を行う
+            dispFlg = 0;
+            init();
+            // ▲2012/03/05 R.K ADD【生産管理】▲
+
+            // 管理拠点（茅野店）以外の場合、受注確認画面を表示
+            if (Common.GetConfigValue("AdminFlg") != "1")
+            {
+                // 通常メニューの場合
+                // 自画面非表示
+                Hide();
+                // 受注確認画面表示
+                new Order.frmOrder().ShowDialog();
+                // 自画面表示
+                Show();
+
+                this.Close();
+            }
+
+
+        }
+        #endregion
+
+        #region " frmMenu_FormClosed"
+        /// <summary>
+        /// メニュー画面終了時
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void frmMenu_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            // アプリケーション終了時には必ずデータベースを閉じる必要があります。
+            Common.CloseDataBase();
+            // アプリケーション終了時には必ずＳＤＫモジュールを開放する必要があります。
+            Common.SDK_Terminate();
+        }
+        #endregion
+
+        #region " データ取込処理"
+
+        #region " XMLDataImport"
+        /// <summary>
+        /// データ取込処理
+        /// </summary>
+        private void XMLDataImport(object sender, DoWorkEventArgs e)
+        {
+            // 本社DBデータインポート
+            if (MainDBDataImport() == false)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            // 管理拠点（茅野店）の場合、売上データを取り込み
+            if (Common.GetConfigValue("AdminFlg") == "1")
+            {
+                // 茅野店DBデータインポート
+                if (StoreDBDataImport(Common.GetConfigValue("ChinoDB"), Common.GetConfigValue("ChinoFolder")) == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 上諏訪店DBデータインポート
+                if (StoreDBDataImport(Common.GetConfigValue("KamisuwaDB"), Common.GetConfigValue("KamisuwaFolder")) == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 下諏訪店DBデータインポート
+                if (StoreDBDataImport(Common.GetConfigValue("ShimosuwaDB"), Common.GetConfigValue("ShimosuwaFolder")) == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 岡谷店DBデータインポート
+                if (StoreDBDataImport(Common.GetConfigValue("IruhuDB"), Common.GetConfigValue("IruhuFolder")) == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                //包材データインポート
+                if (StoreHozaiDBDataImport() == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                
+                // 現在の日付が月初め(1日)の場合、在庫の登録を行う
+                if (System.DateTime.Now.Day == 1)
+                {
+                    // 茅野店の登録
+                    if (InsertGessyoZaiko("茅野店_ConnectionString", Common.GetConfigValue("SokoCd"), 0) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+
+                    // 下諏訪店の登録
+                    if (InsertGessyoZaiko("下諏訪店_ConnectionString", Common.GetConfigValue("SokoCd"), 1) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+
+                    // 上諏訪店の登録
+                    if (InsertGessyoZaiko("上諏訪店_ConnectionString", Common.GetConfigValue("SokoCd"), 2) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+
+                    // 岡谷店の登録
+                    if (InsertGessyoZaiko("イルフ店_ConnectionString", Common.GetConfigValue("SokoCd"), 3) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+
+                    // 営業の登録
+                    if (InsertGessyoZaiko("本社_ConnectionString", Common.GetConfigValue("EigyoRyohinSoko"), 4) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+
+                    // 茅野工場の登録
+                    if (InsertGessyoZaiko("本社_ConnectionString", Common.GetConfigValue("ChinoRyohinSoko"), 5) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region " MainDBDataImport"
+        /// <summary>
+        /// 本社DBデータ取込
+        /// </summary>
+        /// <returns></returns>
+        private bool MainDBDataImport()
+        {
+            //ＳＤＫコールバッククラス
+            SdkCallBack HanbaiCallback = new SdkCallBack();
+            DataTable dt = new DataTable();
+            string csvFullPath = "";
+            string xmlFullPath = "";
+
+            try
+            {
+                // CSVファイルを出力し、SDKを使用して弥生DBに登録する
+                HanbaiCallback.SetForm(this);
+                if (Common.OpenDataBase(Common.enumProductType.HANBAI_AUTO, Common.GetConfigValue("MainDB"), Common.GetConfigValue("YayoiLoginUser"), Common.GetConfigValue("YayoiLoginPassword"), 100, HanbaiCallback) == false)
+                {
+                    // データベースのオープンに失敗した場合、処理を中断する
+                    closeFlg = true;
+                    return false;
+                }
+                else
+                {
+                    // データベースが正常にオープンされた場合、弥生DBへの登録を行う
+                    // 茅野店発注伝票
+                    csvFullPath = System.IO.Path.Combine(Common.CsvFolderLocation, Common.GetConfigValue("ChinoFolder") + "_" + Common.GetConfigValue("OrderXMLFile").Substring(0, Common.GetConfigValue("OrderXMLFile").Length - ".csv".Length) + ".csv");
+                    xmlFullPath = Common.GetConfigValue("ServerFolderLocation") + @"\" + Common.GetConfigValue("ChinoFolder") + @"\" + Common.GetConfigValue("OrderXMLFile");
+                    if (File.Exists(xmlFullPath))
+                    {
+                        // 指定したXMLﾌｧｲﾙが存在している場合のみ取込実行
+                        if (OrderDataCreate(1, xmlFullPath, csvFullPath))
+                        {
+                            // 取込データが作成できた場合、データのインポートを行う
+                            if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.JuchuDempyo, false, false) == false)
+                            {
+                                return false;
+                            }
+                            else
+                            {
+                                // 取込成功の場合、サーバーのXMLファイル・XSDファイルを削除する
+                                File.Delete(xmlFullPath);
+                                //File.Delete(xmlFullPath.Substring(0, xmlFullPath.Length - ".xsd".Length) + ".xsd");
+                                // CSVファイルの削除
+                                File.Delete(csvFullPath);
+                            }
+                        }
+                        else
+                        {
+                            // データ作成失敗
+                            return false;
+                        }
+                    }
+
+                    // 上諏訪店発注伝票
+                    csvFullPath = System.IO.Path.Combine(Common.CsvFolderLocation, Common.GetConfigValue("KamisuwaFolder") + "_" + Common.GetConfigValue("OrderXMLFile").Substring(0, Common.GetConfigValue("OrderXMLFile").Length - ".csv".Length) + ".csv");
+                    xmlFullPath = Common.GetConfigValue("ServerFolderLocation") + @"\" + Common.GetConfigValue("KamisuwaFolder") + @"\" + Common.GetConfigValue("OrderXMLFile");
+                    if (File.Exists(xmlFullPath))
+                    {
+                        // 指定したXMLﾌｧｲﾙが存在している場合のみ取込実行
+                        if (OrderDataCreate(2, xmlFullPath, csvFullPath))
+                        {
+                            // 取込データが作成できた場合、データのインポートを行う
+                            if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.JuchuDempyo, false, false) == false)
+                            {
+                                return false;
+                            }
+                            else
+                            {
+                                // 取込成功の場合、サーバーのXMLファイル・XSDファイルを削除する
+                                File.Delete(xmlFullPath);
+                                //File.Delete(xmlFullPath.Substring(0, xmlFullPath.Length - ".xsd".Length) + ".xsd");
+                                // CSVファイルの削除
+                                File.Delete(csvFullPath);
+                            }
+                        }
+                        else
+                        {
+                            // データ作成失敗
+                            return false;
+                        }
+                    }
+
+                    // 下諏訪店発注伝票
+                    csvFullPath = System.IO.Path.Combine(Common.CsvFolderLocation, Common.GetConfigValue("ShimosuwaFolder") + "_" + Common.GetConfigValue("OrderXMLFile").Substring(0, Common.GetConfigValue("OrderXMLFile").Length - ".csv".Length) + ".csv");
+                    xmlFullPath = Common.GetConfigValue("ServerFolderLocation") + @"\" + Common.GetConfigValue("ShimosuwaFolder") + @"\" + Common.GetConfigValue("OrderXMLFile");
+                    if (File.Exists(xmlFullPath))
+                    {
+                        // 指定したXMLﾌｧｲﾙが存在している場合のみ取込実行
+                        if (OrderDataCreate(3, xmlFullPath, csvFullPath))
+                        {
+                            // 取込データが作成できた場合、データのインポートを行う
+                            if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.JuchuDempyo, false, false) == false)
+                            {
+                                return false;
+                            }
+                            else
+                            {
+                                // 取込成功の場合、サーバーのXMLファイル・XSDファイルを削除する
+                                File.Delete(xmlFullPath);
+                                //File.Delete(xmlFullPath.Substring(0, xmlFullPath.Length - ".xsd".Length) + ".xsd");
+                                // CSVファイルの削除
+                                File.Delete(csvFullPath);
+                            }
+                        }
+                        else
+                        {
+                            // データ作成失敗
+                            return false;
+                        }
+                    }
+
+                    // 岡谷店発注伝票
+                    csvFullPath = System.IO.Path.Combine(Common.CsvFolderLocation, Common.GetConfigValue("IruhuFolder") + "_" + Common.GetConfigValue("OrderXMLFile").Substring(0, Common.GetConfigValue("OrderXMLFile").Length - ".csv".Length) + ".csv");
+                    xmlFullPath = Common.GetConfigValue("ServerFolderLocation") + @"\" + Common.GetConfigValue("IruhuFolder") + @"\" + Common.GetConfigValue("OrderXMLFile");
+                    if (File.Exists(xmlFullPath))
+                    {
+                        // 指定したXMLﾌｧｲﾙが存在している場合のみ取込実行
+                        if (OrderDataCreate(4, xmlFullPath, csvFullPath))
+                        {
+                            // 取込データが作成できた場合、データのインポートを行う
+                            if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.JuchuDempyo, false, false) == false)
+                            {
+                                return false;
+                            }
+                            else
+                            {
+                                // 取込成功の場合、サーバーのXMLファイル・XSDファイルを削除する
+                                File.Delete(xmlFullPath);
+                                //File.Delete(xmlFullPath.Substring(0, xmlFullPath.Length - ".xsd".Length) + ".xsd");
+                                // CSVファイルの削除
+                                File.Delete(csvFullPath);
+                            }
+                        }
+                        else
+                        {
+                            // データ作成失敗
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                // エラーの為登録失敗
+                return false;
+            }
+            finally
+            {
+                // DBクローズ＆SDK開放を最後に行う
+                Common.CloseDataBase();
+                Common.SDK_Terminate();
+            }
+        }
+        #endregion
+
+        #region " StoreDBDataImport"
+        /// <summary>
+        /// 各店舗DBデータ取込
+        /// </summary>
+        /// <param name="DataBaseName"></param>
+        /// <param name="FolderName"></param>
+        /// <returns></returns>
+        private bool StoreDBDataImport(string DataBaseName, string FolderName)
+        {
+            //ＳＤＫコールバッククラス
+            SdkCallBack HanbaiCallback = new SdkCallBack();
+            DataTable dt = new DataTable();
+            string csvFullPath = "";
+            string xmlFullPath = "";
+
+            string soCd = "";   // 倉庫コード
+            string tenpoCd = ""; // 店舗コード
+            string PosNo = "";
+
+            try
+            {
+                // CSVファイルを出力し、SDKを使用して弥生DBに登録する
+                HanbaiCallback.SetForm(this);
+                if (Common.OpenDataBase(Common.enumProductType.HANBAI_AUTO, DataBaseName, Common.GetConfigValue("YayoiLoginUser"), Common.GetConfigValue("YayoiLoginPassword"), 100, HanbaiCallback) == false)
+                {
+                    // データベースのオープンに失敗した場合、処理を中断する
+                    closeFlg = true;
+                    return false;
+                }
+                else
+                {
+                    // データベースが正常にオープンされた場合、弥生DBへの登録を行う
+                    // 売上伝票
+                    csvFullPath = System.IO.Path.Combine(Common.CsvFolderLocation, FolderName + "_" + Common.GetConfigValue("UriageXMLFile") + ".csv");
+                    System.IO.DirectoryInfo UriageXmlFile = new DirectoryInfo(System.IO.Path.Combine(Common.GetConfigValue("ServerFolderLocation"), FolderName));
+
+                    foreach (FileInfo Info in UriageXmlFile.GetFiles())
+                    {
+                        if (Info.Name.Substring(0, Common.GetConfigValue("UriageXMLFile").Length) == Common.GetConfigValue("UriageXMLFile") && Info.Extension == ".xml")
+                        {
+                            xmlFullPath = Path.Combine(Info.DirectoryName, Info.Name);
+                            if (File.Exists(xmlFullPath))
+                            {
+                                // Pos判別(包材)
+                                if (Info.Name == "ReceiptData_1.xml" || Info.Name == "ReceiptData.xml")
+                                {
+                                    PosNo = "1";
+                                }
+                                else if (Info.Name == "ReceiptData_2.xml")
+                                {
+                                    PosNo = "2";
+                                }
+
+                                // 各店舗の倉庫コード(包材)
+                                if (DataBaseName == "茅野")
+                                {
+                                    soCd = Common.GetConfigValue("HouzaiChinoSoko");
+                                }
+                                else if (DataBaseName == "下諏訪")
+                                {
+                                    soCd = Common.GetConfigValue("HouzaiShimosuwaSoko");
+                                }
+                                else if (DataBaseName == "上諏訪")
+                                {
+                                    soCd = Common.GetConfigValue("HouzaiKamisuwaSoko");
+                                }
+                                else if (DataBaseName == "イルフ")
+                                {
+                                    soCd = Common.GetConfigValue("HouzaiOkayaSoko");
+                                }
+                                else
+                                {
+                                    return false;
+                                }
+
+                                // 店舗コード取得(包材)
+                                tenpoCd = Convert.ToString(soCd.Substring(3));
+
+                                // 指定したXMLﾌｧｲﾙが存在している場合のみ取込実行
+                                if (UriageDataCreate(xmlFullPath, csvFullPath))
+                                {
+                                    // 取込データが作成できた場合、データのインポートを行う
+                                    if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.UriageDempyo, false, false) == false)
+                                    {
+                                        return false;
+                                    }
+                                    else
+                                    {
+                                        // ▼2011/11/30 R.K ADD【運用変更：理論在庫倉庫からも同様の売上数をマイナスする】▼
+                                        if (ShukkoDataCreate(xmlFullPath, csvFullPath))
+                                        {
+                                            // 取込データが作成できた場合、データのインポートを行う
+                                            if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.ShukkoDempyo, true, false) == false)
+                                                return false;
+                                            else
+                                                // CSVファイルの削除
+                                                File.Delete(csvFullPath);
+                                        }
+                                        else
+                                        {
+                                            // データ作成失敗
+                                            return false;
+                                        }
+                                    }
+                                    // 包材CSV作成
+                                    if (HozaiCreate(xmlFullPath, csvFullPath, soCd, tenpoCd, PosNo, FolderName) == false)
+                                    {
+                                        return false;
+                                    }
+                                }
+                                else
+                                {
+                                    // データ作成失敗
+                                    return false;
+                                }
+                                // xmlファイル削除
+                                File.Delete(xmlFullPath);
+
+                            }
+                        }
+                    }
+                   
+                    // 返品・廃棄伝票
+                    csvFullPath = System.IO.Path.Combine(Common.CsvFolderLocation, FolderName + "_" + Common.GetConfigValue("ReturnXMLFile").Substring(0, Common.GetConfigValue("ReturnXMLFile").Length - ".csv".Length) + ".csv");
+                    xmlFullPath = Common.GetConfigValue("ServerFolderLocation") + @"\" + FolderName + @"\" + Common.GetConfigValue("ReturnXMLFile");
+                    if (File.Exists(xmlFullPath))
+                    {
+                        // 指定したXMLﾌｧｲﾙが存在している場合のみ取込実行
+                        if (ReturnDataCreate(xmlFullPath, csvFullPath, Common.GetConfigValue("ZeroSokoCd")))
+                        {
+                                // 各店舗の倉庫コード(包材)
+                                if (DataBaseName == "茅野")
+                                {
+                                    soCd = Common.GetConfigValue("HouzaiChinoSoko");
+                                }
+                                else if (DataBaseName == "下諏訪")
+                                {
+                                    soCd = Common.GetConfigValue("HouzaiShimosuwaSoko");
+                                }
+                                else if (DataBaseName == "上諏訪")
+                                {
+                                    soCd = Common.GetConfigValue("HouzaiKamisuwaSoko");
+                                }
+                                else if (DataBaseName == "イルフ")
+                                {
+                                    soCd = Common.GetConfigValue("HouzaiOkayaSoko");
+                                }
+                                else
+                                {
+                                    return false;
+                                }
+
+                                // 店舗コード取得(包材)
+                                tenpoCd = Convert.ToString(soCd.Substring(3));
+                            // (包材)返品・廃棄伝票
+                            if (HozaiCreate(xmlFullPath, csvFullPath, soCd, tenpoCd, "9", FolderName) == false)
+                            {
+                                return false;
+                            }
+
+                            // 取込データが作成できた場合、データのインポートを行う
+                            if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.ShukkoDempyo, false, false) == false)
+                            {
+                                return false;
+                            }
+                            else
+                            {
+                                // CSVファイルの削除
+                                File.Delete(csvFullPath);
+
+                                // ▼2011/11/30 R.K ADD【運用変更：理論在庫倉庫からも同様の破棄数をマイナスする】▼
+                                if (ReturnDataCreate(xmlFullPath, csvFullPath, Common.GetConfigValue("SokoCd")))
+                                {
+                                    // 取込データが作成できた場合、データのインポートを行う
+                                    if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.ShukkoDempyo, false, false) == false)
+                                        return false;
+                                    else
+                                        // CSVファイルの削除
+                                        File.Delete(csvFullPath);
+                                }
+                                else
+                                {
+                                    // データ作成失敗
+                                    return false;
+                                }
+                                // ▲2011/11/30 R.K ADD【運用変更：理論在庫倉庫からも同様の破棄数をマイナスする】▲
+
+                                //▼2017/07/21　包材のインポートが終わったらファイルの削除を行う▼
+                                // 取込成功の場合、サーバーのXMLファイル・XSDファイルを削除する
+                                File.Delete(xmlFullPath);
+                            }
+                            
+                        }
+                        else
+                        {
+                            // データ作成失敗
+                            return false;
+                        }
+                    }
+
+                }
+                return true;
+            }
+            catch
+            {
+                // エラーの為登録失敗
+                return false;
+            }
+            finally
+            {
+                // DBクローズ＆SDK開放を最後に行う
+                Common.CloseDataBase();
+                Common.SDK_Terminate();
+            }
+        }
+        #endregion
+
+        #region " StoreHozaiDBDataImport"
+        /// <summary>
+        /// 各店舗包材データ取込
+        /// </summary>
+        /// <param name="DataBaseName"></param>
+        /// <param name="FolderName"></param>
+        /// <returns></returns>
+        private bool StoreHozaiDBDataImport()
+        {
+            //ＳＤＫコールバッククラス
+            SdkCallBack HanbaiCallback = new SdkCallBack();
+            DataTable dt = new DataTable();
+            string csvFullPath = "";
+
+            try
+            {
+                // CSVファイルを出力し、SDKを使用して弥生DBに登録する(包材事業所へ接続)
+                HanbaiCallback.SetForm(this);
+                if (Common.OpenDataBase(Common.enumProductType.HANBAI_AUTO, Common.GetConfigValue("HozaiDB"), Common.GetConfigValue("YayoiLoginUser"), Common.GetConfigValue("YayoiLoginPassword"), 100, HanbaiCallback) == false)
+                {
+                    // データベースのオープンに失敗した場合、処理を中断する
+                    closeFlg = true;
+                    return false;
+                }
+                else
+                {
+                    // 売上伝票
+                    csvFullPath = Convert.ToString(new DirectoryInfo(System.IO.Path.Combine(Common.GetConfigValue("ServerFolderLocation"), "hozai" + ".csv")));
+                    // CSVファイルがあるかチェック
+                    if (File.Exists(csvFullPath))
+                    {
+                        // CSVファイルが出力された場合、登録を行う
+                        if (Common.SDK_Import(csvFullPath, Common.enumTexType.CSV, 1, Common.enumImportObject.ShukkoDempyo, false, false) == false)
+                        {
+                            return false;
+                        }
+                    }
+                }
+                // csvファイル削除
+                File.Delete(csvFullPath);
+                return true;
+            }
+            catch
+            {
+                // エラーの為登録失敗
+                return false;
+            }
+            finally
+            {
+                // DBクローズ＆SDK開放を最後に行う
+                Common.CloseDataBase();
+                Common.SDK_Terminate();
+            }
+        }
+        #endregion
+        
+        #region " OrderDataCreate"
+        /// <summary>
+        /// 発注(受注)伝票取込＆CSV出力
+        /// </summary>
+        /// <param name="tenpoKbn">1:茅野店 2:上諏訪店 3:下諏訪店 4:岡谷店</param>
+        /// <param name="xmlFullPath">取込XMLファイルパス</param>
+        /// <param name="csvFullPath">出力CSVファイルパス</param>
+        /// <returns></returns>
+        private bool OrderDataCreate(int tenpoKbn, string xmlFullPath, string csvFullPath)
+        {
+            DataTable dt = new DataTable();
+            string CustCd = "";
+
+            switch (tenpoKbn)
+            {
+                case 1:
+                    // 茅野店
+                    CustCd = Common.GetConfigValue("ChinoCustCd");
+                    break;
+                case 2:
+                    // 上諏訪店
+                    CustCd = Common.GetConfigValue("kamisuwaCustCd");
+                    break;
+                case 3:
+                    // 下諏訪店
+                    CustCd = Common.GetConfigValue("ShimosuwaCustCd");
+                    break;
+                case 4:
+                    // 岡谷店
+                    CustCd = Common.GetConfigValue("IruhuCustCd");
+                    break;
+            }
+
+            try
+            {
+                // 伝票取込
+                dt = DataConverter.ConvertXML2DataTable(xmlFullPath);
+
+                // 取込データ編集
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    dt.Rows[i][10] = CustCd;                                    // 得意先コード
+
+                    // 商品が入力されている行のみ
+                    if (String.IsNullOrEmpty(dt.Rows[i][15].ToString()) == false)
+                    {
+                        // 課税区分の設定
+                        if (Common.GetShohinZeiKbn(dt.Rows[i][15].ToString()) == 11)
+                            // 11の場合、消費税区分をテーブルから取得
+                            dt.Rows[i][18] = Common.GetZeiritsu(Convert.ToDateTime(Convert.ToInt32(dt.Rows[i][3]).ToString("0000/00/00")), 1);
+                        else
+                            // その他の場合、取得した値を入れる
+                            dt.Rows[i][18] = Common.GetShohinZeiKbn(dt.Rows[i][15].ToString());
+
+                        // 倉庫コード、商品コードの設定
+                        if (dt.Rows[i][15].ToString().Substring(7, 1) == "1")
+                        {
+                            // 下諏訪工場良品倉庫
+                            dt.Rows[i][22] = Common.GetConfigValue("ShimosuwaRyohinSoko");
+                            // 商品コードを変換(8桁目を0に)
+                            dt.Rows[i][15] = dt.Rows[i][15].ToString().Substring(0, 7) + "0" + dt.Rows[i][15].ToString().Substring(8);
+                        }
+                        else if (dt.Rows[i][15].ToString().Substring(7, 1) == "2")
+                        {
+                            // 上諏訪工場良品倉庫
+                            dt.Rows[i][22] = Common.GetConfigValue("KamisuwaRyohinSoko");
+                            // 商品コードを変換(8桁目を0に)
+                            dt.Rows[i][15] = dt.Rows[i][15].ToString().Substring(0, 7) + "0" + dt.Rows[i][15].ToString().Substring(8);
+                        }
+                        else
+                        {
+                            // 茅野工場良品倉庫
+                            dt.Rows[i][22] = Common.GetConfigValue("ChinoRyohinSoko");
+                        }
+                    }
+                    else
+                    {
+                        // 商品が入力されていない場合、課税区分は規定値を取得
+                        dt.Rows[i][18] = Common.GetZeiritsu(Convert.ToDateTime(Convert.ToInt32(dt.Rows[i][3]).ToString("0000/00/00")), 1);
+                    }
+                }
+
+                // 伝票CSV出力
+                if (DataConverter.ConvertDataTable2CSV(dt, csvFullPath) == false)
+                    return false;
+
+                return true;
+            }
+            catch
+            {
+                // 取込失敗
+                return false;
+            }
+        }
+        #endregion
+
+        #region " UriageDataCreate"
+        /// <summary>
+        /// 売上伝票取込＆CSV出力
+        /// </summary>
+        /// <param name="xmlFullPath">取込XMLファイルパス</param>
+        /// <param name="csvFullPath">出力CSVファイルパス</param>
+        /// <returns></returns>
+        private bool UriageDataCreate(string xmlFullPath, string csvFullPath)
+        {
+            DataTable dt = new DataTable();
+            DataTable csvDt = new DataTable();
+            DataRow csvDr;
+
+
+            try
+            {
+                // 伝票取込
+                dt = DataConverter.ConvertXML2DataTable(xmlFullPath);
+
+                csvDt = dt.Clone();
+
+                // 取込データ編集
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    if (Common.IsNumeric(dt.Rows[i][4]))
+                    {
+                        // 伝票番号が数値の場合のみ処理を行う
+                        csvDr = csvDt.NewRow();
+                        csvDr.ItemArray = dt.Rows[i].ItemArray;
+                        csvDr[10] = Common.GetConfigValue("CustCd");                    // 得意先コード
+
+                        // 課税区分
+                        if (Common.GetShohinZeiKbn(dt.Rows[i][15].ToString()) == 11)
+                            // 11の場合、消費税区分をテーブルから取得
+                            csvDr[18] = Common.GetZeiritsu(Convert.ToDateTime(Convert.ToInt32(dt.Rows[i][3]).ToString("0000/00/00")), 1);
+                        else
+                            // その他の場合、取得した値を入れる
+                            csvDr[18] = Common.GetShohinZeiKbn(dt.Rows[i][15].ToString());
+                        
+                        // ▼2011/11/30 R.K ADD【運用変更：倉庫追加の為、倉庫コードを指定する】▼
+                        csvDr[22] = Common.GetConfigValue("ZeroSokoCd");                // 倉庫コード
+                        // ▲2011/11/30 R.K ADD【運用変更：倉庫追加の為、倉庫コードを指定する】▲
+                        csvDt.Rows.Add(csvDr);
+                    }
+                }
+
+                // 伝票CSV出力
+                if (DataConverter.ConvertDataTable2CSV(csvDt, csvFullPath) == false)
+                    return false;
+
+                return true;
+            }
+            catch
+            {
+                // 取込失敗
+                return false;
+            }
+        }
+        #endregion
+
+        #region " ShukkoDataCreate"
+        // ▼2011/11/30 R.K ADD【運用変更：理論在庫倉庫からも同様の売上数をマイナスする】▼
+        /// <summary>
+        /// 売上伝票取込＆CSV出力(出庫伝票で登録)
+        /// </summary>
+        /// <param name="xmlFullPath">取込XMLファイルパス</param>
+        /// <param name="csvFullPath">出力CSVファイルパス</param>
+        /// <returns></returns>
+        private bool ShukkoDataCreate(string xmlFullPath, string csvFullPath)
+        {
+            DataTable dt = new DataTable();
+            DataTable csvDt = new DataTable();
+            DataRow csvDr;
+            int cnt = 0;
+            string denNo = "";
+            decimal denDt = 0;
+
+            try
+            {
+                // 伝票取込
+                dt = DataConverter.ConvertXML2DataTable(xmlFullPath);
+
+                // 列作成
+                for (int i = 0; i < 38; i++)
+                {
+                    csvDt.Columns.Add(i.ToString());
+                }
+
+                // 取込データ編集
+                denNo = Convert.ToString(dt.Rows[0][4]);
+                denDt = Convert.ToDecimal(dt.Rows[0][3]);
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    if (Common.IsNumeric(dt.Rows[i][4]) && String.IsNullOrEmpty(Convert.ToString(dt.Rows[i][15])) == false)
+                    {
+                        // 伝票番号が前の行と同じ場合
+                        if (denNo == Convert.ToString(dt.Rows[i][4]))
+                        {
+                            // 伝票番号が数値の場合のみ処理を行う
+                            cnt++;
+
+                            csvDr = csvDt.NewRow();
+
+                            csvDr[3] = Convert.ToDecimal(dt.Rows[i][3]);                        // 伝票日付
+                            csvDr[5] = 25;                                                      // 伝票区分(25固定)
+                            csvDr[10] = Common.GetConfigValue("CustCd");                        // 得意先コード
+                            csvDr[13] = cnt;                                                    // 行番号
+                            csvDr[14] = 10;                                                     // 明細区分(10：通常)
+                            csvDr[15] = Convert.ToString(dt.Rows[i][15]);                       // 商品コード
+                            csvDr[17] = Convert.ToString(dt.Rows[i][17]);                       // 商品名
+                            csvDr[19] = Convert.ToString(dt.Rows[i][19]);                       // 単位
+                            csvDr[22] = Common.GetConfigValue("SokoCd");                        // 倉庫コード
+                            csvDr[23] = Common.ToDecimal(dt.Rows[i][23].ToString());            // 数量
+
+                            csvDt.Rows.Add(csvDr);
+
+                            denDt = Convert.ToDecimal(dt.Rows[i][3]);
+                        }
+                        // 伝票番号が前の行と異なる場合
+                        else
+                        {
+                            // 登録データが1件以上ある場合、備考作成
+                            if (csvDt.Rows.Count > 0)
+                            {
+                                cnt++;
+                                csvDr = csvDt.NewRow();
+                                csvDr[3] = denDt;                                                   // 伝票日付
+                                csvDr[5] = 25;                                                      // 伝票区分(25固定)
+                                csvDr[10] = Common.GetConfigValue("CustCd");                        // 得意先コード
+                                csvDr[13] = cnt;                                                    // 行番号
+                                csvDr[14] = 0;                                                      // 明細区分(0：伝票摘要)
+                                csvDr[17] = "理論在庫倉庫売上数マイナス登録";                       // 摘要名
+                                csvDr[22] = Common.GetConfigValue("SokoCd");                        // 倉庫コード
+                                csvDt.Rows.Add(csvDr);
+                            }
+
+                            cnt = 0;
+                            denNo = Convert.ToString(dt.Rows[i][4]);
+
+                            // 伝票番号が数値の場合のみ処理を行う
+                            cnt++;
+
+                            csvDr = csvDt.NewRow();
+
+                            csvDr[3] = Convert.ToDecimal(dt.Rows[i][3]);                        // 伝票日付
+                            csvDr[5] = 25;                                                      // 伝票区分(25固定)
+                            csvDr[10] = Common.GetConfigValue("CustCd");                        // 得意先コード
+                            csvDr[13] = cnt;                                                    // 行番号
+                            csvDr[14] = 10;                                                     // 明細区分(10：通常)
+                            csvDr[15] = Convert.ToString(dt.Rows[i][15]);                       // 商品コード
+                            csvDr[17] = Convert.ToString(dt.Rows[i][17]);                       // 商品名
+                            csvDr[19] = Convert.ToString(dt.Rows[i][19]);                       // 単位
+                            csvDr[22] = Common.GetConfigValue("SokoCd");                        // 倉庫コード
+                            csvDr[23] = Common.ToDecimal(dt.Rows[i][23].ToString());            // 数量
+
+                            csvDt.Rows.Add(csvDr);
+
+                            denDt = Convert.ToDecimal(dt.Rows[i][3]);
+                        }
+                    }
+                }
+
+                // 登録データが1件以上ある場合、備考作成
+                if (csvDt.Rows.Count > 0)
+                {
+                    cnt++;
+                    csvDr = csvDt.NewRow();
+                    csvDr[3] = denDt;                                                   // 伝票日付
+                    csvDr[5] = 25;                                                      // 伝票区分(25固定)
+                    csvDr[10] = Common.GetConfigValue("CustCd");                        // 得意先コード
+                    csvDr[13] = cnt;                                                    // 行番号
+                    csvDr[14] = 0;                                                      // 明細区分(0：伝票摘要)
+                    csvDr[17] = "理論在庫倉庫売上数マイナス登録";                       // 摘要名
+                    csvDr[22] = Common.GetConfigValue("SokoCd");                        // 倉庫コード
+                    csvDt.Rows.Add(csvDr);
+                }
+
+                // 伝票CSV出力
+                if (DataConverter.ConvertDataTable2CSV(csvDt, csvFullPath) == false)
+                    return false;
+
+                return true;
+            }
+            catch
+            {
+                // 取込失敗
+                return false;
+            }
+        }
+        // ▲2011/11/30 R.K ADD【運用変更：理論在庫倉庫からも同様の売上数をマイナスする】▲
+        #endregion
+    
+        #region " HozaiCreate"
+        /// <summary>
+        /// 売上伝票取込＆CSV出力(出庫伝票で登録)
+        /// </summary>
+        /// <param name="xmlFullPath">取込XMLファイルパス</param>
+        /// <param name="csvFullPath">出力CSVファイルパス</param>
+        /// <param name="soCd">倉庫コード</param>
+        /// <param name="tenpoCd">店舗コード</param>
+        /// <param name="PosNo">POS番号</param>
+        /// <returns></returns>
+        private bool HozaiCreate(string xmlFullPath, string csvFullPath, string soCd, string tenpoCd, string PosNo, string FolderName)
+        {
+            string strSql = string.Empty;
+            DataTable hoziDt = new DataTable();   // 包材商品コード格納テーブル
+            DataTable xmlDt = new DataTable();    // レシート商品格納テーブル
+            DataTable csvDt = new DataTable();    // csv作成用テーブル
+            DataTable shohinDt = new DataTable(); // 商品コード比較用データベース
+            DataRow csvDr;
+
+            bool chkflag = false; // 比較フラグ
+            string denDt = "";    // 日付取得用
+            string denpyoNo = ""; // 伝票番号
+            string chkdenNo = ""; // 伝票番号チェック
+            int cnt = 0;          // カウント
+
+            // ReciptData取込・ReturnDataの取得
+            xmlDt = DataConverter.ConvertXML2DataTable(xmlFullPath);
+            try
+            {
+                // 包材事業所の商品コード取得
+                // DB接続
+                ConnectionStringSettings settings;
+                settings = ConfigurationManager.ConnectionStrings["包材_ConnectionString"];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    // データの取得
+                    strSql = "";
+                    strSql = strSql + "SELECT ";
+                    strSql = strSql + "[B]";
+                    strSql = strSql + "FROM SHOHINDAICHO ";
+
+                    hoziDt = _DBAccess.GetDataTable(strSql, "SHOHINDAICHO");
+
+
+                    if (hoziDt.Rows.Count == 0)
+                    {
+                        // データが存在しない場合
+                        MessageManager.Infomation("商品台帳にデータがありません。");
+                        return false;
+                    }
+
+                }
+
+                // 列作成
+                for (int i = 0; i < 38; i++)
+                {
+                    csvDt.Columns.Add(i.ToString());
+                }
+
+                //レシートデータ商品コードのみ取得
+                for (int i = 0; i < xmlDt.Rows.Count; i++)
+                {
+                    chkflag = false; //ループ毎にfalse
+                    string hikaku = Convert.ToString(xmlDt.Rows[i][15]);
+
+                    for (int j = 0; j < hoziDt.Rows.Count; j++)
+                    {
+                        string taisyo = Convert.ToString(hoziDt.Rows[j][0]);  // 包材商品コード
+
+                        if (hikaku == taisyo)
+                        {
+                            chkflag = true;
+                            break;
+                        }
+                    }
+                    // 包材商品のチェック
+                    if (chkflag == false)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        cnt++;　// 行番号カウント
+
+                        // 伝票番号取得
+                        denDt = Convert.ToString(xmlDt.Rows[i][3]); // 日付
+                        denpyoNo = denDt.Substring(2, 6) + tenpoCd + PosNo;
+
+                        if (denpyoNo != chkdenNo)//伝票番号のェック
+                        {
+                            cnt = 1;
+                        }
+                        chkdenNo = denpyoNo;
+
+                        csvDr = csvDt.NewRow();
+
+                        csvDr[3] = Convert.ToDecimal(xmlDt.Rows[i][3]);            // 伝票日付
+                        csvDr[4] = denpyoNo;                                      // 伝票番号
+                        csvDr[5] = 25;                                            // 伝票区分
+                        csvDr[10] = Common.GetConfigValue("CustCd");              // 得意先コード
+                        csvDr[13] = cnt;                                          // 行番号
+                        csvDr[14] = 10;                                           // 明細区分(10：通常)
+                        csvDr[15] = Convert.ToString(xmlDt.Rows[i][15]);           // 商品コード
+                        csvDr[17] = Convert.ToString(xmlDt.Rows[i][17]);           // 商品名
+                        csvDr[22] = Convert.ToString(soCd);                       // 倉庫コード
+                        csvDr[23] = Common.ToDecimal(xmlDt.Rows[i][23].ToString());// 数量
+
+                        csvDt.Rows.Add(csvDr);
+                    }
+
+                }
+
+                //  包材処理が0件の場合CSV出力をしない
+                if (csvDt.Rows.Count > 0)
+                {
+                    csvFullPath = Convert.ToString(new DirectoryInfo(System.IO.Path.Combine(Common.GetConfigValue("ServerFolderLocation"), "hozai" + ".csv")));
+                    // CSVへ出力
+                    if (DataConverter.ConvertDataHozaiTable2CSV(csvDt, csvFullPath) == false)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                // 取込失敗
+                return false;
+            }
+        }
+        #endregion
+
+
+        #region " ReturnDataCreate"
+        /// <summary>
+        /// 返品・廃棄(出庫)伝票取込＆CSV出力
+        /// </summary>
+        /// <param name="xmlFullPath">取込XMLファイルパス</param>
+        /// <param name="csvFullPath">出力CSVファイルパス</param>
+        /// <param name="sokoCd">倉庫コード</param>
+        /// <returns></returns>
+        private bool ReturnDataCreate(string xmlFullPath, string csvFullPath, string sokoCd)
+        {
+            DataTable dt = new DataTable();
+
+            try
+            {
+                // 伝票取込
+                dt = DataConverter.ConvertXML2DataTable(xmlFullPath);
+
+                // 取込データ編集
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    dt.Rows[i][10] = Common.GetConfigValue("CustCd");   // 得意先コード
+                    // ▼2011/11/30 R.K ADD【運用変更：倉庫追加の為、倉庫コードを指定する】▼
+                    dt.Rows[i][22] = sokoCd;                            // 倉庫コード
+                    // ▲2011/11/30 R.K ADD【運用変更：倉庫追加の為、倉庫コードを指定する】▲
+                }
+
+                // 伝票CSV出力
+                if (DataConverter.ConvertDataTable2CSV(dt, csvFullPath) == false)
+                    return false;
+
+                return true;
+            }
+            catch
+            {
+                // 取込失敗
+                return false;
+            }
+        }
+        #endregion
+
+        #endregion
+
+        #region " ボタンクリック処理"
+
+        #region " btnOrder_Click"
+        /// <summary>
+        /// 受注確認ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnOrder_Click(object sender, EventArgs e)
+        {
+            // ▼2012/03/05 R.K UPD【生産管理】▼
+            //// 自画面非表示
+            //Hide();
+            //// 受注確認画面表示
+            //new Order.frmOrder().ShowDialog();
+            //// 自画面表示
+            //Show();
+
+            // メニューによって呼び出し先を変える
+            if (dispFlg == 0)
+            {
+                // 通常メニューの場合
+                // 自画面非表示
+                Hide();
+                // 受注確認画面表示
+                new Order.frmOrder().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            else if (dispFlg == 1)
+            {
+                // 生産管理メニューの場合
+                // 通常メニューの場合
+                // 自画面非表示
+                Hide();
+                // 出荷入力(生産管理)画面表示
+                new Shukka.frmShukka(dispFlg).ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            else if (dispFlg == 2)
+            {
+                // ▼2014/07/07 T.W ADD【棚卸管理】▼
+                // 棚卸管理メニューの場合
+                // 自画面非表示
+                Hide();
+                // 棚卸入力画面表示
+                new Inventory.frmInventory().ShowDialog();
+                // 自画面表示
+                Show();
+                // ▲2014/07/07 T.W ADD【棚卸管理】▲
+            }
+            // ▲2012/03/05 R.K UPD【生産管理】▲
+            else
+            {
+                Hide();
+                // 包材仕入入力画面表示
+                new Houzai.frmHouzaiShiire().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+        }
+        #endregion
+
+        #region " btnShukka_Click"
+        /// <summary>
+        /// 出荷入力ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnShukka_Click(object sender, EventArgs e)
+        {
+            // ▼2012/03/05 R.K UPD【生産管理】▼
+            //// 自画面非表示
+            //Hide();
+            //// 出荷入力画面表示
+            //new Shukka.frmShukka(dispFlg).ShowDialog();
+            //// 自画面表示
+            //Show();
+
+            // メニューによって呼び出し先を変える
+            if (dispFlg == 0)
+            {
+                // 通常メニューの場合
+                // 自画面非表示
+                Hide();
+                // 出荷入力画面表示
+                new Shukka.frmShukka(dispFlg).ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            else if (dispFlg == 2)
+            {
+                // ▼2014/07/07 T.W ADD【棚卸管理】▼
+                // 棚卸管理メニューの場合
+                // 自画面非表示
+                Hide();
+                // 棚卸結果照会画面表示
+                new Inventory.frmInventoryResult().ShowDialog();
+                // 自画面表示
+                Show();
+                // ▲2014/07/07 T.W ADD【棚卸管理】▲
+            }
+            // ▲2012/03/05 R.K UPD【生産管理】▲
+            else
+            {
+                Hide();
+                // 稟議廃棄入力画面表示
+                new Houzai.frmHouzaiRingiHaiki().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+        }
+        #endregion
+
+        #region " btnRetGoods_Click"
+        /// <summary>
+        /// 返品振分入力ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnRetGoods_Click(object sender, EventArgs e)
+        {
+            // ▼2012/03/05 R.K UPD【生産管理】▼
+            //// 自画面非表示
+            //Hide();
+            //// 返品振分入力画面表示
+            //new Return.frmRetGoods().ShowDialog();
+            //// 自画面表示
+            //Show();
+
+            // メニューによって呼び出し先を変える
+            if (dispFlg == 0)
+            {
+                // 通常メニューの場合
+                // 自画面非表示
+                Hide();
+                // 返品振分入力画面表示
+                new Return.frmRetGoods().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            else
+            {
+                // 生産管理メニューの場合
+                // 自画面非表示
+                Hide();
+                // 生産計画入力画面表示
+                new Production.frmSeisanKeikaku().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            // ▲2012/03/05 R.K UPD【生産管理】▲
+        }
+        #endregion
+
+        #region " btnStoreMove_Click"
+        /// <summary>
+        /// 店舗間移動入力ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnStoreMove_Click(object sender, EventArgs e)
+        {
+            // ▼2012/03/05 R.K UPD【生産管理】▼
+            //// 自画面非表示
+            //Hide();
+            //// 店舗間移動入力画面表示
+            //new Ido.frmStoreMove().ShowDialog();
+            //// 自画面表示
+            //Show();
+
+            // メニューによって呼び出し先を変える
+            if (dispFlg == 0)
+            {
+                // 通常メニューの場合
+                // 自画面非表示
+                Hide();
+                // 店舗間移動入力画面表示
+                new Ido.frmStoreMove().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            else if (dispFlg == 2)
+            {
+                // 生産管理メニューの場合
+                // 自画面非表示
+                Hide();
+                // 受注入力画面表示
+                new Order.frmOrderInput().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            // ▲2012/03/05 R.K UPD【生産管理】▲
+            else
+            {
+                Hide();
+                // 交渉記録一覧画面表示
+                new Houzai.frmKoushouKirokuList().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+        }
+        #endregion
+
+        #region " btnHojoMst_Click"
+        /// <summary>
+        /// 補助マスタ入力ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnHojoMst_Click(object sender, EventArgs e)
+        {
+            // メニューによって呼び出し先を変える
+            if (dispFlg == 0)
+            {
+                // 通常メニューの場合
+
+                // 自画面非表示
+                Hide();
+                // 補助マスタ入力画面表示
+                new Hojo.frmHojo().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            else
+            {
+                // 生産管理メニューの場合
+                // 月初在庫の登録を行う
+                if (MessageManager.QuestionNoYes(DateTime.Now.ToString("yyyy年MM月") + "の月初在庫の登録を行います。よろしいですか？") == System.Windows.Forms.DialogResult.No)
+                    return;
+
+                // 茅野店の登録
+                if (InsertGessyoZaiko("茅野店_ConnectionString", Common.GetConfigValue("SokoCd"), 0) == false)
+                    return;
+
+                // 下諏訪店の登録
+                if (InsertGessyoZaiko("下諏訪店_ConnectionString", Common.GetConfigValue("SokoCd"), 1) == false)
+                    return;
+
+                // 上諏訪店の登録
+                if (InsertGessyoZaiko("上諏訪店_ConnectionString", Common.GetConfigValue("SokoCd"), 2) == false)
+                    return;
+
+                // 岡谷店の登録
+                if (InsertGessyoZaiko("イルフ店_ConnectionString", Common.GetConfigValue("SokoCd"), 3) == false)
+                    return;
+
+                // 営業の登録
+                if (InsertGessyoZaiko("本社_ConnectionString", Common.GetConfigValue("EigyoRyohinSoko"), 4) == false)
+                    return;
+
+                // 茅野工場の登録
+                if (InsertGessyoZaiko("本社_ConnectionString", Common.GetConfigValue("ChinoRyohinSoko"), 5) == false)
+                    return;
+
+                MessageManager.Infomation("登録が正常に終了しました。");
+            }
+        }
+        #endregion
+
+        #region " btnShukkaDif_Click"
+        /// <summary>
+        /// 出荷差異確認ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnShukkaDif_Click(object sender, EventArgs e)
+        {
+            // ▼2012/03/05 R.K UPD【生産管理】▼
+            //// 自画面非表示
+            //Hide();
+            //// 出荷差異確認画面表示
+            //new Shukka.frmShukkaDif().ShowDialog();
+            //// 自画面表示
+            //Show();
+
+            // ▼2014/07/02 T.W ADD【棚卸管理】▼
+            if (dispFlg == 0)
+            {
+                dispFlg = 1;
+                init();
+            }
+            else
+            {
+                dispFlg = 2;
+                init();
+            }
+            // 生産管理メニューの表示
+            //dispFlg = 1;
+            //init();
+            // ▲2012/03/05 R.K UPD【生産管理】▲
+            // ▲2014/07/02 T.W ADD【棚卸管理】▲
+        }
+        #endregion
+
+        #region " btnEnd_Click"
+        /// <summary>
+        /// 終了ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnEnd_Click(object sender, EventArgs e)
+        {
+            // ▼2014/07/02 T.W ADD【棚卸管理】▼
+            // ▼2012/03/05 R.K UPD【生産管理】▼
+            //// 終了
+            //this.Close();
+
+            if (dispFlg == 0)
+            {
+                // 終了
+                this.Close();
+            }
+            else if (dispFlg == 1)
+            {
+                // 戻る
+                dispFlg = 0;
+                init();
+            }
+            else if (dispFlg == 2)
+            {
+                // 戻る
+                dispFlg = 1;
+                init();
+            }
+            // ▲2012/03/05 R.K UPD【生産管理】▲
+            // ▲2014/07/02 T.W ADD【棚卸管理】▲
+            else
+            {
+                // 戻る
+                dispFlg = 0;
+                init();
+            }
+        }
+        #endregion
+
+        #region " btnSync_Click"
+        /// <summary>
+        /// 商品台帳同期
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnSync_Click(object sender, EventArgs e)
+        {
+            DataTable dt = new DataTable();
+
+            // ▼2012/03/05 R.K UPD【生産管理】▼
+            //if (MessageManager.QuestionNoYes("商品台帳の同期を行います。よろしいですか？") == DialogResult.No)
+            //{
+            //    // いいえボタンが押された場合、処理は行わない
+            //    return;
+            //}
+
+            //// 同期前にケーキのコード登録チェック
+            //if (Common.GetShohinDaicho(out dt))
+            //{
+            //    for (int i = 0; i < dt.Rows.Count; i++)
+            //    {
+            //        if (Common.ChkCakeShohinCd(dt.Rows[i]["B"].ToString(), false) == false)
+            //        {
+            //            return;
+            //        }
+            //    }
+            //}
+
+            ////ProgressDialogオブジェクトを作成する
+            //Forms.Base.ProgressDialog pd = new Forms.Base.ProgressDialog("商品台帳を同期しています",
+            //    new DoWorkEventHandler(ProgressDialog_DoWork),
+            //    100);
+
+            //pd.Cursor = Cursors.WaitCursor;
+
+            ////進行状況ダイアログを表示する
+            //DialogResult result = pd.ShowDialog(this);
+            ////結果を取得する
+            //if (result == DialogResult.Abort)
+            //{
+            //    //エラー情報を取得する
+            //    Exception ex = pd.Error;
+            //    MessageBox.Show("エラー: " + ex.Message);
+            //}
+            //else if (result == DialogResult.OK)
+            //{
+            //    MessageManager.Infomation("商品台帳の同期が終了しました。");
+            //}
+
+            ////後始末
+            //pd.Dispose();
+
+            // メニューによって呼び出し先を変える
+            if (dispFlg == 0)
+            {
+                // 通常メニューの場合
+                if (MessageManager.QuestionNoYes("商品台帳の同期を行います。よろしいですか？") == DialogResult.No)
+                {
+                    // いいえボタンが押された場合、処理は行わない
+                    return;
+                }
+
+                // 同期前にケーキのコード登録チェック
+                if (Common.GetShohinDaicho(out dt))
+                {
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        if (Common.ChkCakeShohinCd(dt.Rows[i]["B"].ToString(), false) == false)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                //ProgressDialogオブジェクトを作成する
+                Forms.Base.ProgressDialog pd = new Forms.Base.ProgressDialog("商品台帳を同期しています",
+                    new DoWorkEventHandler(ProgressDialog_DoWork),
+                    100);
+
+                pd.Cursor = Cursors.WaitCursor;
+
+                //進行状況ダイアログを表示する
+                DialogResult result = pd.ShowDialog(this);
+                //結果を取得する
+                if (result == DialogResult.Abort)
+                {
+                    //エラー情報を取得する
+                    Exception ex = pd.Error;
+                    MessageBox.Show("エラー: " + ex.Message);
+                }
+                else if (result == DialogResult.OK)
+                {
+                    MessageManager.Infomation("商品台帳の同期が終了しました。");
+                }
+
+                //後始末
+                pd.Dispose();
+            }
+            else if (dispFlg == 1)
+            {
+                // 生産管理メニュー場合
+                // 自画面非表示
+                Hide();
+                // 生産実績不良入力画面表示
+                new Production.frmSeisanJissekiHuryo().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            else
+            {
+                // 生産管理メニュー場合
+                // 自画面非表示
+                Hide();
+                // 条件指定画面を開く
+                Base.BasePrintForm PrtFrm = new Base.BasePrintForm(6);
+
+                PrtFrm.ShowDialog();
+
+                // 自画面表示
+                Show();
+            }
+            // ▲2012/03/05 R.K UPD【生産管理】▲
+        }
+
+        #region " GetShohinDaicho"
+        /// <summary>
+        /// 商品台帳データ取得処理
+        /// </summary>
+        /// <param name="dt">CSV出力対象データ</param>
+        /// <param name="fullDt">全データ</param>
+        private bool GetShohinDaicho(out DataTable dt, out DataTable fullDt,bool HoFlag)
+        {
+            string strSql = string.Empty;       
+
+            dt = new DataTable();
+            fullDt = new DataTable();
+
+            bool HozaiFlag = HoFlag;
+
+            try
+            {
+                // DB接続
+                ConnectionStringSettings settings;
+                settings = ConfigurationManager.ConnectionStrings["本社_ConnectionString"];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    // CSV出力対象データの取得
+                    strSql = "";
+                    strSql = strSql + "SELECT ";
+                    strSql = strSql + "[B],[C],[D],[E],[F],[G],[H],[I],[J],[K],[L],[M],[N],[O],[P],[Q],[R],[S],[T],[U],[V],[W],[X],[Y],[Z],[AA],[AB],[AC],[AD],[AE],[AF],[AG],[AH],[AI],[AJ],[AK],[AL],[AM],[AN],[AO],[AR],[AS_] ";
+                    strSql = strSql + "FROM SHOHINDAICHO ";
+
+                    if (HozaiFlag == true)
+                    {
+                      strSql = strSql + "WHERE [N] = '6' ";
+                     // HozaiFlag = false;
+                    }
+                    
+                    dt = _DBAccess.GetDataTable(strSql, "SHOHINDAICHO");
+
+                    if (dt.Rows.Count == 0)
+                    {
+                        // データが存在しない場合
+                        MessageManager.Infomation("商品台帳にデータがありません。");
+                        return false;
+                    }
+
+                    if (HozaiFlag == false)
+                    {
+                        // 全データの取得
+                        strSql = "";
+                        strSql = strSql + "SELECT ";
+                        strSql = strSql + "* ";
+                        strSql = strSql + "FROM SHOHINDAICHO";
+
+                        fullDt = _DBAccess.GetDataTable(strSql, "SHOHINDAICHO");
+
+                        if (fullDt.Rows.Count == 0)
+                        {
+                            // データが存在しない場合
+                            MessageManager.Infomation("商品台帳にデータがありません。");
+                            return false;
+                        }
+                    }
+
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                // 取得エラー
+                MessageManager.Error("商品台帳の取得中にエラーが発生しました。" + "\r\n" + ex.Message);
+                return false;
+            }
+            finally
+            {
+                // DBクローズ
+                _DBAccess.Close();
+            }
+        }
+        #endregion
+
+        #region " AddShohinDaicho"
+        /// <summary>
+        /// 商品台帳データ登録処理
+        /// </summary>
+        /// <param name="dbName">接続DB名</param>
+        /// <param name="csvFilePath">CSVファイルパス</param>
+        /// <param name="dt">商品台帳登録対象データ</param>
+        /// <returns></returns>
+        private bool AddShohinDaicho(string dbName, string csvFilePath, DataTable dt)
+        {
+            //ＳＤＫコールバッククラス
+            SdkCallBack HanbaiCallback = new SdkCallBack();
+
+            try
+            {
+                // CSVファイルを出力し、SDKを使用して弥生DBに登録する
+                HanbaiCallback.SetForm(this);
+                if (Common.OpenDataBase(Common.enumProductType.HANBAI_AUTO, dbName, Common.GetConfigValue("YayoiLoginUser"), Common.GetConfigValue("YayoiLoginPassword"), 100, HanbaiCallback) == false)
+                    // データベースのオープンに失敗した場合、処理を中断する
+                    return false;
+                else
+                {
+                    // データテーブルからCSVファイル作成
+                    if (DataConverter.ConvertDataTable2CSV(dt, csvFilePath) == false)
+                        return false;
+
+                    // CSVファイルが出力された場合、登録を行う
+                    if (Common.SDK_Import(csvFilePath, Common.enumTexType.CSV, 1, Common.enumImportObject.Shohin, true, true) == false)
+                        return false;
+                }
+
+                // CSVファイルの削除
+                File.Delete(csvFilePath);
+
+                // 正常終了
+                return true;
+            }
+            catch(Exception ex)
+            {
+                // エラーの為登録失敗
+                MessageManager.Error("商品台帳の登録中にエラーが発生しました。" + "\r\n" + ex.Message);
+                return false;
+            }
+            finally
+            {
+                // DBクローズ＆SDK開放を最後に行う
+                Common.CloseDataBase();
+                Common.SDK_Terminate();
+            }
+        }
+        #endregion
+
+        #region " DeleteShohinDaicho"
+        /// <summary>
+        /// 商品台帳テーブル削除
+        /// </summary>
+        /// <param name="dbName">接続DB名</param>
+        /// <returns></returns>
+        private bool DeleteShohinDaicho(string dbName)
+        {
+            string strSql = "";
+
+            try
+            {
+                // DB接続
+                ConnectionStringSettings settings;
+                settings = ConfigurationManager.ConnectionStrings[dbName];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    // トランザクション開始
+                    _DBAccess.BeginTransaction();
+
+                    // データの削除
+                    strSql = "";
+                    strSql = strSql + " DELETE FROM SHOHINDAICHO ";
+
+                    if (_DBAccess.ExecuteNonQuery(strSql) == -1)
+                    {
+                        // 削除失敗
+                        MessageManager.Warning("商品台帳の削除に失敗しました。");
+                        _DBAccess.Rollback();
+                        return false;
+                    }
+
+                    // コミット
+                    _DBAccess.Commit();
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                // 削除失敗
+                MessageManager.Error("商品台帳の削除中にエラーが発生しました。" + "\r\n" + ex.Message);
+                _DBAccess.Rollback();
+                return false;
+            }
+            finally
+            {
+                // DBクローズ
+                _DBAccess.Close();
+            }
+        }
+        #endregion
+
+        #region " UpdateShohinDaicho"
+        /// <summary>
+        /// 商品台帳テーブル更新処理
+        /// </summary>
+        /// <param name="dbName">接続DB名</param>
+        /// <param name="dt">商品台帳データ</param>
+        /// <returns></returns>
+        private bool UpdateShohinDaicho(string dbName, DataTable dt)
+        {
+            string strSql = "";
+
+            try
+            {
+                // DB接続
+                ConnectionStringSettings settings;
+                settings = ConfigurationManager.ConnectionStrings[dbName];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    // トランザクション開始
+                    _DBAccess.BeginTransaction();
+
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        // データの更新
+                        strSql = "";
+                        strSql = strSql + " UPDATE SHOHINDAICHO ";
+                        strSql = strSql + " SET AP = " + dt.Rows[i]["AP"];
+                        strSql = strSql + " WHERE B = '" + dt.Rows[i]["B"].ToString() + "' ";
+
+                        if (_DBAccess.ExecuteNonQuery(strSql) == -1)
+                        {
+                            // 更新失敗
+                            MessageManager.Warning("商品台帳の更新に失敗しました。");
+                            _DBAccess.Rollback();
+                            return false;
+                        }
+                    }
+
+                    // コミット
+                    _DBAccess.Commit();
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                // 更新失敗
+                MessageManager.Error("商品台帳の更新中にエラーが発生しました。" + "\r\n" + ex.Message);
+                _DBAccess.Rollback();
+                return false;
+            }
+            finally
+            {
+                // DBクローズ
+                _DBAccess.Close();
+            }
+        }
+        #endregion
+
+        #region " GetSetShohinDaicho"
+        /// <summary>
+        /// セット商品台帳データ取得処理
+        /// </summary>
+        /// <param name="dt">セット商品台帳データ</param>
+        private bool GetSetShohinDaicho(out DataTable dt)
+        {
+            string strSql = string.Empty;
+
+            dt = new DataTable();
+
+            try
+            {
+                // DB接続
+                ConnectionStringSettings settings;
+                settings = ConfigurationManager.ConnectionStrings["本社_ConnectionString"];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    // CSV出力対象データの取得
+                    strSql = "";
+                    strSql = strSql + "SELECT * FROM SETSHOHIN ";
+
+                    dt = _DBAccess.GetDataTable(strSql, "SETSHOHIN");
+
+                    if (dt.Rows.Count == 0)
+                    {
+                        // データが存在しない場合
+                        MessageManager.Infomation("セット商品台帳にデータがありません。");
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                // 取得エラー
+                MessageManager.Error("セット商品の取得中にエラーが発生しました。" + "\r\n" + ex.Message);
+                return false;
+            }
+            finally
+            {
+                // DBクローズ
+                _DBAccess.Close();
+            }
+        }
+        #endregion
+
+        #region " DeleteSetShohinDaicho"
+        /// <summary>
+        /// セット商品台帳テーブル削除
+        /// </summary>
+        /// <param name="dbName">接続DB名</param>
+        /// <param name="dt">商品台帳データ</param>
+        /// <returns></returns>
+        private bool DeleteSetShohinDaicho(string dbName)
+        {
+            string strSql = "";
+
+            try
+            {
+                // DB接続
+                ConnectionStringSettings settings;
+                settings = ConfigurationManager.ConnectionStrings[dbName];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    // トランザクション開始
+                    _DBAccess.BeginTransaction();
+
+                    // データの削除
+                    strSql = "";
+                    strSql = strSql + " DELETE FROM SETSHOHIN ";
+
+                    if (_DBAccess.ExecuteNonQuery(strSql) == -1)
+                    {
+                        // 削除失敗
+                        MessageManager.Warning("セット商品台帳の削除に失敗しました。");
+                        _DBAccess.Rollback();
+                        return false;
+                    }
+
+                    // コミット
+                    _DBAccess.Commit();
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                // 削除失敗
+                MessageManager.Error("セット商品台帳の削除中にエラーが発生しました。" + "\r\n" + ex.Message);
+                _DBAccess.Rollback();
+                return false;
+            }
+            finally
+            {
+                // DBクローズ
+                _DBAccess.Close();
+            }
+        }
+        #endregion
+
+        #region " InsertSetShohinDaicho"
+        /// <summary>
+        /// セット商品台帳テーブル登録処理
+        /// </summary>
+        /// <param name="dbName">接続DB名</param>
+        /// <param name="dt">商品台帳データ</param>
+        /// <returns></returns>
+        private bool InsertSetShohinDaicho(string dbName, DataTable dt)
+        {
+            string strSql = "";
+
+            try
+            {
+                // DB接続
+                ConnectionStringSettings settings;
+                settings = ConfigurationManager.ConnectionStrings[dbName];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    // トランザクション開始
+                    _DBAccess.BeginTransaction();
+
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        // データの登録
+                        strSql = "";
+                        strSql = strSql + " INSERT INTO SETSHOHIN ";
+                        strSql = strSql + " VALUES ( ";
+                        strSql = strSql + " '" + dt.Rows[i]["A"] + "' ";
+                        strSql = strSql + "," + dt.Rows[i]["B"] + " ";
+                        strSql = strSql + "," + dt.Rows[i]["C"] + " ";
+                        strSql = strSql + ",'" + dt.Rows[i]["D"] + "' ";
+                        strSql = strSql + ",'" + dt.Rows[i]["E"] + "' ";
+                        strSql = strSql + ",'" + dt.Rows[i]["F"] + "' ";
+                        strSql = strSql + ",'" + dt.Rows[i]["G"] + "' ";
+                        strSql = strSql + ",'" + dt.Rows[i]["H"] + "' ";
+                        strSql = strSql + "," + dt.Rows[i]["I"] + " ";
+                        strSql = strSql + "," + dt.Rows[i]["J"] + " ";
+                        strSql = strSql + "," + dt.Rows[i]["K"] + " ";
+                        strSql = strSql + ",'" + dt.Rows[i]["L"] + "' ";
+                        strSql = strSql + "," + dt.Rows[i]["M"] + " ";
+                        strSql = strSql + "," + dt.Rows[i]["N"] + " ";
+                        strSql = strSql + "," + dt.Rows[i]["O"] + " ";
+                        strSql = strSql + "," + dt.Rows[i]["P"] + " ";
+                        strSql = strSql + ",'" + dt.Rows[i]["Q"] + "' ";
+                        strSql = strSql + "," + dt.Rows[i]["R"] + " ";
+                        strSql = strSql + "," + dt.Rows[i]["S"] + " ";
+                        strSql = strSql + ")";
+
+                        if (_DBAccess.ExecuteNonQuery(strSql) == -1)
+                        {
+                            // 登録失敗
+                            MessageManager.Warning("セット商品台帳の登録に失敗しました。");
+                            _DBAccess.Rollback();
+                            return false;
+                        }
+                    }
+
+                    // コミット
+                    _DBAccess.Commit();
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                // 登録失敗
+                MessageManager.Error("セット商品台帳の登録中にエラーが発生しました。" + "\r\n" + ex.Message);
+                _DBAccess.Rollback();
+                return false;
+            }
+            finally
+            {
+                // DBクローズ
+                _DBAccess.Close();
+            }
+        }
+        #endregion
+
+        #endregion
+
+         // ▼2012/07/11 R.K ADD【破棄データ出力】▼
+        #region " btnHaki_Click"
+        /// <summary>
+        /// 破棄データ出力
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnHaki_Click(object sender, EventArgs e)
+        {
+            if (dispFlg == 0)
+            {
+                // 自画面非表示
+                Hide();
+                // 破棄データ出力画面表示
+                new Haki.frmHaki().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+            else
+            {
+                // 生産管理メニューの場合
+                // 通常メニューの場合
+                // 自画面非表示
+                Hide();
+                // 出荷予定入力画面表示
+                new Shukka.frmShukkaPlan().ShowDialog();
+                // 自画面表示
+                Show();
+            }
+        }
+        #endregion
+        // ▲2012/07/11 R.K ADD【破棄データ出力】▲
+
+        #endregion
+
+        #region " ProgressDialog_DoWork"
+        //DoWorkイベントハンドラ
+        private void ProgressDialog_DoWork(object sender, DoWorkEventArgs e)
+        {
+            DataTable dt = new DataTable();
+            DataTable fullDt = new DataTable();
+            DataTable setDt = new DataTable();
+            DataTable hoDt = new DataTable();
+
+            string csvPath = System.IO.Path.Combine(Common.CsvFolderLocation, Common.GetConfigValue("ItemFile"));
+
+            bool HozaiFlag = false;
+
+
+            // 商品台帳データ取得
+           if (GetShohinDaicho(out dt, out fullDt,HozaiFlag))
+            {
+                // 茅野店DB
+                // 現在あるデータを削除
+                if (DeleteShohinDaicho("茅野店_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 商品台帳データが取得できた場合、SDKでの取り込みを行う
+                if (AddShohinDaicho(Common.GetConfigValue("ChinoDB"), csvPath, dt))
+                {
+                    // SDKの登録が成功した場合、商品区分の更新を行う
+                    if (UpdateShohinDaicho("茅野店_ConnectionString", fullDt) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+                else
+                {
+                    e.Cancel = true;
+                    return;
+                }
+             
+                // 上諏訪店DB
+                // 現在あるデータを削除
+                if (DeleteShohinDaicho("上諏訪店_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 商品台帳データが取得できた場合、SDKでの取り込みを行う
+                if (AddShohinDaicho(Common.GetConfigValue("KamisuwaDB"), csvPath, dt))
+                {
+                    // SDKの登録が成功した場合、商品区分の更新を行う
+                    if (UpdateShohinDaicho("上諏訪店_ConnectionString", fullDt) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+                else
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 下諏訪店DB
+                // 現在あるデータを削除
+                if (DeleteShohinDaicho("下諏訪店_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 商品台帳データが取得できた場合、SDKでの取り込みを行う
+                if (AddShohinDaicho(Common.GetConfigValue("ShimosuwaDB"), csvPath, dt))
+                {
+                    // SDKの登録が成功した場合、商品区分の更新を行う
+                    if (UpdateShohinDaicho("下諏訪店_ConnectionString", fullDt) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+                else
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 岡谷店DB
+                // 現在あるデータを削除
+                if (DeleteShohinDaicho("イルフ店_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 商品台帳データが取得できた場合、SDKでの取り込みを行う
+                if (AddShohinDaicho(Common.GetConfigValue("IruhuDB"), csvPath, dt))
+                {
+                    // SDKの登録が成功した場合、商品区分の更新を行う
+                    if (UpdateShohinDaicho("イルフ店_ConnectionString", fullDt) == false)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+                else
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+      
+            // セット商品台帳データ取得
+            if (GetSetShohinDaicho(out setDt))
+            {
+                // 茅野店DB
+                // 現在あるデータを削除
+                if (DeleteSetShohinDaicho("茅野店_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // データの登録
+                if (InsertSetShohinDaicho("茅野店_ConnectionString", setDt) == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 上諏訪店DB
+                // 現在あるデータを削除
+                if (DeleteSetShohinDaicho("上諏訪店_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // データの登録
+                if (InsertSetShohinDaicho("上諏訪店_ConnectionString", setDt) == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 下諏訪店DB
+                // 現在あるデータを削除
+                if (DeleteSetShohinDaicho("下諏訪店_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // データの登録
+                if (InsertSetShohinDaicho("下諏訪店_ConnectionString", setDt) == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // 岡谷店DB
+                // 現在あるデータを削除
+                if (DeleteSetShohinDaicho("イルフ店_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // データの登録
+                if (InsertSetShohinDaicho("イルフ店_ConnectionString", setDt) == false)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            //包材フラグ
+            HozaiFlag = true;
+            //包材商品の取得
+            if (GetShohinDaicho(out hoDt,out dt, HozaiFlag))
+            {
+                //包材DB
+                //現在ある包材データを削除
+                if (DeleteShohinDaicho("包材_ConnectionString") == false)
+                {
+                    e.Cancel = true;
+                    HozaiFlag = false;
+                    return;
+                }
+                
+                // 包材データの登録
+                if (AddShohinDaicho(Common.GetConfigValue("HozaiDB"), csvPath, hoDt))
+                {
+                    e.Cancel = true;
+                    HozaiFlag = false;
+                    return;
+                }
+           }
+        }
+        #endregion
+
+        #region " init"
+        // ▼2012/03/05 R.K ADD【生産管理】▼
+        /// <summary>
+        /// 画面項目初期化処理
+        /// </summary>
+        private void init()
+        {
+            if (dispFlg == 0)
+            {
+                // 初期メニューの表示
+                // 名称の設定
+                lblMenuTitle.Text = "メインメニュー";
+                btnOrder.Text = "受注確認";
+                btnShukka.Text = "出荷入力";
+                btnRetGoods.Text = "返品振分入力";
+                btnStoreMove.Text = "店舗間移動入力";
+                btnHojoMst.Text = "補助マスタ入力";
+                btnShukkaDif.Text = "生産管理";
+                btnSync.Text = "商品同期";
+                btnHaki.Text = "破棄データ出力";
+                btnHouzai.Text = "包材管理";
+                btnEnd.Text = "終　了";
+
+                // 表示・非表示設定
+                btnOrder.Visible = true;
+                btnShukka.Visible = true;
+                btnRetGoods.Visible = true;
+                btnStoreMove.Visible = true;
+                btnHojoMst.Visible = true;
+                btnShukkaDif.Visible = true;
+                btnSync.Visible = true;
+                // ▼2012/07/11 R.K ADD【破棄データ出力】▼
+                btnHaki.Visible = true;
+                // ▲2012/07/11 R.K ADD【破棄データ出力】▲
+                btnHouzai.Visible = true;
+                btnEnd.Visible = true;
+
+                // フォーカスの設定
+                btnOrder.Focus();
+            }
+            else if (dispFlg == 1)
+            {
+                // 生産管理メニューの表示
+                // 名称の設定
+                lblMenuTitle.Text = "生産管理メニュー";
+                btnOrder.Text = "出荷入力(生産管理)";
+                btnRetGoods.Text = "生産計画入力";
+                btnSync.Text = "生産実績不良入力";
+                btnStoreMove.Text = "受注入力";
+                btnHojoMst.Text = "月初在庫保存";
+                // ▼2014/07/02 T.W ADD【棚卸管理】▼
+                btnShukkaDif.Text = "棚卸管理";
+                // ▲2014/07/02 T.W ADD【棚卸管理】▲
+                btnHaki.Text = "出荷予定入力";
+                btnEnd.Text = "戻　る";
+
+                // 表示・非表示設定
+                btnOrder.Visible = true;
+                btnShukka.Visible = false;
+                btnRetGoods.Visible = true;
+                btnStoreMove.Visible = true;
+                btnHojoMst.Visible = false;
+                // ▼2014/07/02 T.W ADD【棚卸管理】▼
+                btnShukkaDif.Visible = true;
+                // ▲2014/07/02 T.W ADD【棚卸管理】▲
+                btnSync.Visible = true;
+                // ▼2012/07/11 R.K ADD【破棄データ出力】▼
+                btnHaki.Visible = true;
+                // ▲2012/07/11 R.K ADD【破棄データ出力】▲
+                btnHouzai.Visible = false;
+                btnEnd.Visible = true;
+
+                // フォーカスの設定
+                btnOrder.Focus();
+            }
+            else if (dispFlg == 2)
+            {
+                // ▼2014/07/02 T.W ADD【棚卸管理】▼
+                // 棚卸管理メニューの表示
+                // 名称の設定
+                lblMenuTitle.Text = "棚卸管理メニュー";
+                btnOrder.Text = "棚卸入力";
+                btnShukka.Text = "棚卸結果照会";
+                btnRetGoods.Text = "";
+                btnStoreMove.Text = "";
+                btnHojoMst.Text = "";
+                btnShukkaDif.Text = "";
+
+                btnSync.Text = "";
+                btnEnd.Text = "戻　る";
+
+                // 表示・非表示設定
+                btnOrder.Visible = true;
+                btnShukka.Visible = true;
+                btnRetGoods.Visible = false;
+                btnStoreMove.Visible = false;
+                btnHojoMst.Visible = false;
+                btnShukkaDif.Visible = false;
+                btnSync.Visible = false;
+                btnHaki.Visible = false;
+                btnHouzai.Visible = false;
+                btnEnd.Visible = true;
+
+                // フォーカスの設定
+                btnOrder.Focus();
+                // ▲2014/07/02 T.W ADD【棚卸管理】▲
+            }
+            else
+            {
+                // 名称の設定
+                lblMenuTitle.Text = "包材管理メニュー";
+                btnOrder.Text = "包材仕入入力";
+                btnShukka.Text = "稟議廃棄入力";
+                btnStoreMove.Text = "交渉記録";
+                btnHojoMst.Text = "";
+                btnRetGoods.Text = "";
+                btnShukkaDif.Text = "";
+
+                btnSync.Text = "";
+                btnEnd.Text = "戻　る";
+
+                // 表示・非表示設定
+                btnOrder.Visible = true;
+                btnShukka.Visible = true;
+                btnHojoMst.Visible = false;
+                btnStoreMove.Visible = true;
+                btnRetGoods.Visible = false;
+                btnShukkaDif.Visible = false;
+                btnSync.Visible = false;
+                btnHaki.Visible = false;
+                btnHouzai.Visible = false;
+                btnEnd.Visible = true;
+            }
+        }
+        // ▲2012/03/05 R.K ADD【生産管理】▲
+        #endregion
+
+        // ▼2012/03/05 R.K ADD【生産管理】▼
+        #region " InsertGessyoZaiko"
+        /// <summary>
+        /// 在庫テーブル登録処理
+        /// </summary>
+        /// <param name="dbName">接続DB名</param>
+        /// <param name="sokoCd">倉庫コード</param>
+        /// <param name="Kbn">0:茅野店 1:下諏訪店 2:上諏訪店 3:岡谷店 4:営業 5:茅野工場</param>
+        /// <returns></returns>
+        private bool InsertGessyoZaiko(string dbName, string sokoCd, int Kbn)
+        {
+            DataTable dt = new DataTable();
+            StringBuilder strSql = new StringBuilder();
+            string KbnName = "";
+
+            int Year = Convert.ToInt32(DateTime.Now.ToString("yyyy"));
+            int Month = Convert.ToInt32(DateTime.Now.ToString("MM"));
+
+            // 区分名の設定
+            if (Kbn == 0)
+                KbnName = "茅野店";
+            else if (Kbn == 1)
+                KbnName = "下諏訪店";
+            else if (Kbn == 2)
+                KbnName = "上諏訪店";
+            else if (Kbn == 3)
+                KbnName = "岡谷店";
+            else if (Kbn == 4)
+                KbnName = "営業";
+            else if (Kbn == 5)
+                KbnName = "茅野工場";
+
+            try
+            {
+                // 月初在庫データの取得
+                ConnectionStringSettings settings;
+                settings = ConfigurationManager.ConnectionStrings[dbName];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    strSql = new StringBuilder();
+                    strSql.Append("SELECT ");
+                    strSql.Append(" SHOHIN.B AS SHO_CD ");
+                    strSql.Append(",SHOHIN.C AS SHO_NM ");
+                    strSql.Append(",ISNULL(SHOHIN_SU.QTY,0) AS ZAIKO ");
+                    strSql.Append("FROM SHOHINDAICHO SHOHIN LEFT JOIN (SELECT A AS SHO_CD");
+                    strSql.Append("                                          , E AS QTY ");
+                    strSql.Append("                                    FROM SHOHINSOKONENKEI_SURYO INNER JOIN (SELECT A AS CODE1 ");
+                    strSql.Append("                                                                                 , B AS CODE2 ");
+                    strSql.Append("                                                                                 , MAX(C) AS MAXID ");
+                    strSql.Append("                                                                            FROM SHOHINSOKONENKEI_SURYO ");
+                    strSql.Append("                                                                            WHERE B = '" + sokoCd + "' ");
+                    strSql.Append("                                                                            GROUP BY A, B) AS X1 ");
+                    strSql.Append("                                                                        ON A = X1.CODE1 ");
+                    strSql.Append("                                                                       AND B = X1.CODE2 ");
+                    strSql.Append("                                                                       AND C = X1.MAXID ) SHOHIN_SU ");
+                    strSql.Append("                                ON SHOHIN.B = SHOHIN_SU.SHO_CD ");
+                    strSql.Append("WHERE SUBSTRING(SHOHIN.B,8,1) NOT IN ('1','2') ");
+                    strSql.Append("  AND SHOHIN.B <> '99999999999999' ");
+                    strSql.Append("  AND SHOHIN.I = 1 ");
+                    strSql.Append("  AND SHOHIN.N = '0' ");
+                    strSql.Append("  AND SHOHIN.O = '01' ");
+
+                    dt = _DBAccess.GetDataTable(strSql.ToString(), "ZAIKO");
+
+                    // 件数が0件の場合は処理を抜ける
+                    if (dt.Rows.Count <= 0)
+                        return true;
+
+                    // DBクローズ
+                    _DBAccess.Close();
+                }
+
+                // 在庫データの登録
+                settings = new ConnectionStringSettings();
+                settings = ConfigurationManager.ConnectionStrings["本社_ConnectionString"];
+                if (settings == null)
+                {
+                    // データベースの接続文字列が取得できなかった場合
+                    MessageManager.Warning("データベース接続文字列が取得できません。");
+                    return false;
+                }
+                else
+                {
+
+                    // 接続文字列の設定
+                    _DBAccess = new SfmDBAccess(settings.ConnectionString);
+
+                    // DBオープン
+                    _DBAccess.Open();
+
+                    // トランザクション開始
+                    _DBAccess.BeginTransaction();
+
+                    // 登録前に現在登録されているデータを削除
+                    strSql = new StringBuilder();
+                    strSql.Append("DELETE FROM Zaiko ");
+                    strSql.Append("WHERE Kbn = " + Kbn + " AND Year = " + Year + " AND Month = " + Month);
+
+                    if (_DBAccess.ExecuteNonQuery(strSql.ToString()) == -1)
+                    {
+                        // 登録失敗
+                        MessageManager.Warning("在庫テーブルの削除に失敗しました。");
+                        _DBAccess.Rollback();
+                        return false;
+                    }
+
+                    // 在庫データの登録
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        strSql = new StringBuilder();
+                        strSql.Append(" INSERT INTO Zaiko ");
+                        strSql.Append(" VALUES ( ");
+                        strSql.Append(" " + Kbn + " ");
+                        strSql.Append(",'" + KbnName + "' ");
+                        strSql.Append("," + Year + " ");
+                        strSql.Append("," + Month + " ");
+                        strSql.Append(",'" + dt.Rows[i]["SHO_CD"] + "' ");
+                        strSql.Append(",'" + dt.Rows[i]["SHO_NM"] + "' ");
+                        strSql.Append("," + dt.Rows[i]["ZAIKO"] + " ");
+                        strSql.Append(")");
+
+                        if (_DBAccess.ExecuteNonQuery(strSql.ToString()) == -1)
+                        {
+                            // 登録失敗
+                            MessageManager.Warning("在庫テーブルの登録に失敗しました。");
+                            _DBAccess.Rollback();
+                            return false;
+                        }
+                    }
+
+                    // コミット
+                    _DBAccess.Commit();
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // 登録失敗
+                MessageManager.Error("在庫テーブルの登録中にエラーが発生しました。" + "\r\n" + ex.Message);
+                _DBAccess.Rollback();
+                return false;
+            }
+            finally
+            {
+                // DBクローズ
+                _DBAccess.Close();
+            }
+        }
+        #endregion
+
+        // ▲2012/03/05 R.K ADD【生産管理】▲
+
+        private void btnHouzai_Click(object sender, EventArgs e)
+        {
+            if (dispFlg == 0)
+            {
+                dispFlg = 3;
+                init();
+            }
+        }
+
+    }
+}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ﻿namespace CustomerManagement.Forms
+{
+    partial class frmPurchaseDetail
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            System.ComponentModel.ComponentResou

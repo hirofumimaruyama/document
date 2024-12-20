@@ -1,0 +1,128 @@
+<html>
+<head>
+<title>ê∂ìkèÓïÒìoò^</title>
+</head>
+<body>
+<h1>ê∂ìkèÓïÒìoò^</h1>
+
+<p>äwçZãÊï™<select id="grade_division">
+	<option value="">---</option>
+	<option value="1">è¨</option>
+	<option value="2">íÜ</option>
+</select>
+äwîN<select id="grade_id">
+	<option value="">---</option>
+  <optgroup label="1">
+	<option value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	<option value="5">5</option>
+	<option value="6">6</option>
+  </optgroup>
+  <optgroup label="2">
+	<option value="7">1</option>
+	<option value="8">2</option>
+	<option value="9">3</option>
+  </optgroup>
+</select>
+ëg<select id="class_id">
+	<option value="">---</option>
+  <optgroup label="1">
+	<option value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+  </optgroup>
+  <optgroup label="2">
+	<option value="4">1</option>
+	<option value="5">2</option>
+  </optgroup>
+  <optgroup label="3">
+	<option value="6">1</option>
+  </optgroup>
+  <optgroup label="4">
+	<option value="7">1</option>
+	<option value="8">2</option>
+	<option value="9">3</option>
+	<option value="10">4</option>
+  </optgroup>
+  <optgroup label="5">
+	<option value="11">1</option>
+	<option value="12">2</option>
+  </optgroup>
+  <optgroup label="6">
+	<option value="13">1</option>
+	<option value="14">2</option>
+	<option value="15">3</option>
+  </optgroup>
+
+  <optgroup label="7">
+	<option value="16">A</option>
+	<option value="17">B</option>
+  </optgroup>
+  <optgroup label="8">
+	<option value="18">A</option>
+	<option value="19">B</option>
+	<option value="20">C</option>
+  </optgroup>
+  <optgroup label="9">
+	<option value="21">a</option>
+	<option value="22">b</option>
+  </optgroup>
+
+</select>
+<script type="text/javascript">
+function ConnectedSelect(selIdList){
+	for(var i=0;selIdList[i];i++) {
+		var CS = new Object();
+		var obj = document.getElementById(selIdList[i]);
+		if(i){
+			CS.node=document.createElement('select');
+			var GR = obj.getElementsByTagName('optgroup');
+			while(GR[0]) {
+				CS.node.appendChild(GR[0].cloneNode(true));
+				obj.removeChild(GR[0]);
+			}
+			// obj.disabled = true;
+		}
+		if(selIdList[i+1]) {
+			CS.nextSelect = document.getElementById(selIdList[i+1]);
+			obj.onchange = function(){ConnectedSelectEnabledSelect(this)};
+		} else {
+			CS.nextSelect = false;
+		}
+		obj.ConnectedSelect = CS;
+	}
+}
+
+function ConnectedSelectEnabledSelect(oSel){
+	var oVal = oSel.options[oSel.selectedIndex].value;
+	if(oVal) {
+		while(oSel.ConnectedSelect.nextSelect.options[1])oSel.ConnectedSelect.nextSelect.remove(1);
+		var eF = false;
+		for(var OG=oSel.ConnectedSelect.nextSelect.ConnectedSelect.node.firstChild;OG;OG=OG.nextSibling) {
+			if(OG.label == oVal) {
+				eF = true;
+				for(var OP=OG.firstChild;OP;OP=OP.nextSibling)
+					oSel.ConnectedSelect.nextSelect.appendChild(OP.cloneNode(true));
+				break;
+			}
+		}
+		// oSel.ConnectedSelect.nextSelect.disabled = !eF;
+	} else {
+		while(oSel.ConnectedSelect.nextSelect.options[1])oSel.ConnectedSelect.nextSelect.remove(1);
+		oSel.ConnectedSelect.nextSelect.selectedIndex = 0;
+		// oSel.ConnectedSelect.nextSelect.disabled = true;
+	}
+	if(oSel.ConnectedSelect.nextSelect.onchange)oSel.ConnectedSelect.nextSelect.onchange();
+}
+ConnectedSelect(['grade_division','grade_id','class_id']);
+</script>
+</p>
+
+
+</body>
+</html>
+
+
+

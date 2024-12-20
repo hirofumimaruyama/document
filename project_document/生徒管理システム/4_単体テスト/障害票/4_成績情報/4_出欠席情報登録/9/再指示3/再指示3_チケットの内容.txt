@@ -1,0 +1,34 @@
+問題
+  (1)Number of school < Suspension of Attendanceのエラーチェックが
+     入力行のNumber of schoolとSuspension of Attendanceの間で
+     フォーカス移動した時にも行われる。
+
+  (2)Days Attendanceのエラーチェックが
+     入力行のNumber of schoolとSuspension of AttendanceとDays absenceの間で
+     フォーカス移動した時にも行われる。
+
+  (3)入力エラーとなる場合、同一のエラーメッセージが2回出力される。
+
+対応内容
+  (1)Number of school < Suspension of Attendanceのエラーチェックタイミングは
+     入力行のNumber of schoolとSuspension of Attendance以外に
+     フォーカス移動した場合に行うようにし
+     入力行のNumber of schoolとSuspension of Attendanceにフォーカスがあるときには
+     エラーチェックを行わないようにしてください。
+     入力エラーが発生した場合は、Suspension of Attendanceに
+     フォーカスを設定するようにしてください。
+
+  (2)Days Attendanceのエラーチェックタイミングは
+     入力行のNumber of schoolとSuspension of AttendanceとDays absence以外に
+     フォーカス移動した場合に行うようにし
+     入力行のNumber of schoolとSuspension of AttendanceとDays absenceに
+     フォーカスがあるときには、エラーチェックを行わないようにしてください。
+     入力エラーが発生した場合は、Days absenceに
+     フォーカスを設定するようにしてください。
+
+     また、Number of school < Suspension of Attendanceのエラーと
+     Days Attendanceのエラーが同時に発生した時はNumber of schoolに
+     フォーカスを設定するようにしてください。
+
+  (3)入力エラーとなる場合はエラーメッセージは1度だけ出力するようにしてください。
+     IE10での確認をお願いします。

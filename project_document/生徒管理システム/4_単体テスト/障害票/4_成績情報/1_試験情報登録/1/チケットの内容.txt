@@ -1,0 +1,6 @@
+問題
+  SchoolYear, School, Gradeを選択している状態で、SchoolYearを変更すると
+  Classの値が設定されない。
+
+対応内容
+  SchoolYearが変更されても、Classの値を設定するようにしてください。

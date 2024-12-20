@@ -1,0 +1,6 @@
+問題
+  Pupils Info EditのZipcodeに全角が入力できる。(IMEがdisabledにならない)
+
+対応内容
+  style="ime-mode: disabled;"はinputタグではなく
+  formタグに記述しないと機能しないようなので、ime-modeの記述をformタグに移動してください。

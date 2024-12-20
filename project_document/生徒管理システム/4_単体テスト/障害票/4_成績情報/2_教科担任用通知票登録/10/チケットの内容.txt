@@ -1,0 +1,5 @@
+問題
+  表示ボタンを押すと、フッターにCopyright c 2013 Saikyo Schoolと表示される。
+
+対応内容
+  フッターにFooter.jspを使用するようにしてください。

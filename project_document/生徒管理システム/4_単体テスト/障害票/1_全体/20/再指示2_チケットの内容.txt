@@ -1,0 +1,30 @@
+問題
+  (1)登録内容を変更し登録処理を行う前に検索条件を変更し
+     出力される入力内容破棄メッセージをOKを押した後
+     戻るボタンおよび画面遷移リンクを押すと再度入力内容破棄メッセージが出力される。
+     対象機能
+       1.ExamInfoRegistration(戻るボタンと画面遷移リンク)
+       2.SchoolReportforClassTeacherInfoRegistration(戻るボタンのみ)
+       3.SchoolReportforSubjectTeacherInfoRegistration(画面遷移リンクのみ)
+
+  (2)登録内容を変更して登録処理を行った後、戻るボタンを押すおよび検索条件を変更すると
+     入力内容破棄メッセージが出力される。
+     対象機能
+       1.ExamInfoRegistration
+
+  (3)登録内容を変更して登録処理を行った後、検索条件を変更して
+     戻るボタンおよび画面遷移リンクを押すと入力内容破棄メッセージが出力される。
+       1.SchoolReportforClassTeacherInfoRegistration(画面遷移リンクのみ)
+       2.SchoolReportforSubjectTeacherInfoRegistration(画面遷移リンクのみ)
+       3.AttendanceInfoRegistration(戻るボタンと画面遷移リンク)
+
+  (4)生徒情報登録画面で生徒情報検索後、戻るボタンおよび画面遷移リンクを押しても
+     入力内容破棄メッセージがでない。学生証番号入力時も同様
+
+  (5)生徒情報登録画面で値を入力後、生徒情報検索ボタンを押すと
+     入力内容破棄メッセージが出力される。
+
+
+対応内容
+  (1),(2),(3),(5)の場合、入力内容破棄メッセージを出力しないようにしてください。
+  (4)の場合、入力内容破棄メッセージを出力するようにしてください。
